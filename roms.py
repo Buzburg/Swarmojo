@@ -162,8 +162,8 @@ def run_entry():
             )
             print(json.dumps(res, indent=2))
         elif subcmd == "hud":
-            title = sys.argv[3] if len(sys.argv) > 3 else "Swarmojo Herald OS"
-            res = engine.build_herald_hud(system_title=title)
+            title = sys.argv[3] if len(sys.argv) > 3 else "Swarmojo HUD"
+            res = engine.build_swarmojo_hud(system_title=title)
             print(json.dumps(res, indent=2))
         raise SystemExit(0)
     elif len(sys.argv) > 1 and sys.argv[1] == "writer":

@@ -111,18 +111,30 @@ def test_design_premade_agent_and_team():
     assert "studio_director" in team.member_ids
 
 
-def test_design_engine_build_herald_hud(tmp_path: Path):
+def test_design_engine_build_swarmojo_hud(tmp_path: Path):
     engine = DesignAgentEngine(workspace_root=str(tmp_path))
-    res = engine.build_herald_hud(system_title="Herald OS Orbit")
+    res = engine.build_swarmojo_hud(system_title="Swarmojo HUD Orbit")
     assert res["status"] == "ready"
-    assert res["system_title"] == "Herald OS Orbit"
+    assert res["system_title"] == "Swarmojo HUD Orbit"
     assert res["total_agents"] == 6
     assert res["total_milestones"] == 4
-    hud_file = tmp_path / ".mojo_design" / "herald_hud.html"
+    hud_file = tmp_path / ".mojo_design" / "swarmojo_hud.html"
     assert hud_file.exists()
     content = hud_file.read_text(encoding="utf-8")
+    assert "SWARMOJO" in content
     assert "SOVEREIGN-OS" in content
     assert "SPECIALIST ROSTER" in content
-    assert "Atlas" in content
+    assert "buzburg-bee-icon" in content
+    assert "--accent-gold:" in content
     assert "TriggerTangle Offline Rehearsal" in content
+
+
+def test_design_engine_build_herald_hud_alias(tmp_path: Path):
+    engine = DesignAgentEngine(workspace_root=str(tmp_path))
+    res = engine.build_herald_hud(system_title="Swarmojo HUD Legacy")
+    assert res["status"] == "ready"
+    legacy_file = tmp_path / ".mojo_design" / "herald_hud.html"
+    assert legacy_file.exists()
+    content = legacy_file.read_text(encoding="utf-8")
+    assert "SWARMOJO" in content
 

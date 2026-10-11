@@ -741,13 +741,13 @@ td {{
             "html_length": len(dash_html),
         }
 
-    def build_herald_hud(
+    def build_swarmojo_hud(
         self,
-        system_title: str = "Swarmojo Sovereign OS",
+        system_title: str = "Swarmojo HUD",
         agents_roster: Optional[List[Dict[str, Any]]] = None,
         live_dag_milestones: Optional[List[Dict[str, str]]] = None,
     ) -> Dict[str, Any]:
-        """Generates an ultra-sleek, deep-blue glassmorphism operating desktop HUD with real-time agent telemetry and DAG milestones."""
+        """Generates an ultra-sleek, Buzburg-themed glassmorphism Swarmojo HUD with honey-gold and dark-charcoal palette, real-time agent telemetry, and DAG milestones."""
         roster = agents_roster or [
             {"id": "atlas", "name": "Atlas", "role": "Meta Coordinator", "status": "active", "load": "12%", "model": "deepseek-r1", "avatar": "⚡"},
             {"id": "daedalus", "name": "Daedalus", "role": "DeepCode Architect", "status": "busy", "load": "78%", "model": "qwen-coder", "avatar": "🛠️"},
@@ -805,18 +805,28 @@ td {{
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{system_title} — Autonomous Operations HUD</title>
+  <title>{system_title} — Sovereign Operations Console</title>
   <style>
 :root {{
-  --bg-deep: #070B14;
-  --bg-glass: rgba(13, 21, 38, 0.72);
-  --border-glass: rgba(99, 102, 241, 0.22);
-  --border-glow: rgba(99, 102, 241, 0.5);
-  --accent-cyan: #06B6D4;
-  --accent-indigo: #6366F1;
+  color-scheme: dark;
+  --bg-deep: #13110E;
+  --bg-glass: rgba(28, 24, 21, 0.82);
+  --bg-card: rgba(38, 32, 27, 0.75);
+  --bg-card-hover: rgba(54, 46, 38, 0.92);
+  --border-glass: rgba(229, 168, 35, 0.22);
+  --border-glow: rgba(229, 168, 35, 0.65);
+  --accent-gold: #E5A823;
+  --accent-gold-bright: #FBBF24;
+  --accent-gold-dim: #B2882C;
+  --accent-amber: #D97706;
+  --accent-charcoal: #362D26;
+  --accent-charcoal-dark: #1E1A17;
   --accent-emerald: #10B981;
-  --text-main: #F8FAFC;
-  --text-dim: #94A3B8;
+  --text-main: #FAF8F5;
+  --text-muted: #BDB4A8;
+  --text-dim: #8C8276;
+  --terminal-bg: #0B0908;
+  --terminal-text: #FDE68A;
 }}
 
 * {{
@@ -829,8 +839,9 @@ body {{
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: var(--bg-deep);
   background-image: 
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.18) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.15) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(229, 168, 35, 0.16) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(54, 45, 38, 0.38) 0px, transparent 55%),
+    radial-gradient(circle at 50% 25%, rgba(229, 168, 35, 0.05) 0px, transparent 60%);
   color: var(--text-main);
   height: 100vh;
   overflow: hidden;
@@ -838,11 +849,12 @@ body {{
   flex-direction: column;
 }}
 
-/* Top Menu Bar (Herald OS style) */
+/* Top Menu Bar */
 .hud-menubar {{
-  height: 44px;
-  background: rgba(7, 11, 20, 0.85);
-  backdrop-filter: blur(16px);
+  height: 48px;
+  background: rgba(19, 17, 15, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-glass);
   display: flex;
   align-items: center;
@@ -860,46 +872,49 @@ body {{
 
 .system-brand {{
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   color: var(--text-main);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
+  font-size: 0.95rem;
 }}
 
 .system-brand span {{
-  color: var(--accent-cyan);
+  font-weight: 800;
 }}
 
 .menubar-right {{
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  color: var(--text-dim);
+  gap: 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
 }}
 
 .live-indicator {{
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  color: var(--accent-emerald);
-  font-weight: 600;
+  gap: 0.45rem;
+  color: var(--accent-gold-bright);
+  font-weight: 700;
   font-size: 0.8rem;
+  letter-spacing: 0.03em;
 }}
 
 .pulse-dot {{
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background-color: var(--accent-emerald);
-  box-shadow: 0 0 10px var(--accent-emerald);
+  background-color: var(--accent-gold);
+  box-shadow: 0 0 10px var(--accent-gold);
   animation: pulse 2s infinite;
 }}
 
 @keyframes pulse {{
-  0% {{ opacity: 1; transform: scale(1); }}
-  50% {{ opacity: 0.4; transform: scale(0.85); }}
-  100% {{ opacity: 1; transform: scale(1); }}
+  0% {{ opacity: 1; transform: scale(1); box-shadow: 0 0 12px var(--accent-gold); }}
+  50% {{ opacity: 0.35; transform: scale(0.85); box-shadow: 0 0 4px var(--accent-gold); }}
+  100% {{ opacity: 1; transform: scale(1); box-shadow: 0 0 12px var(--accent-gold); }}
 }}
 
 /* Main Desktop Workspace */
@@ -916,12 +931,13 @@ body {{
 .glass-panel {{
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border-glass);
   border-radius: 16px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.55);
 }}
 
 .panel-header {{
@@ -939,6 +955,7 @@ body {{
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  color: var(--text-main);
 }}
 
 .panel-body {{
@@ -952,8 +969,8 @@ body {{
 
 /* Left Column: Agent Swarm Roster */
 .hud-agent-card {{
-  background: rgba(17, 27, 49, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-card);
+  border: 1px solid rgba(229, 168, 35, 0.12);
   border-radius: 12px;
   padding: 0.85rem;
   display: flex;
@@ -964,19 +981,20 @@ body {{
 .hud-agent-card:hover {{
   border-color: var(--border-glow);
   transform: translateY(-2px);
-  background: rgba(23, 36, 66, 0.8);
+  background: var(--bg-card-hover);
+  box-shadow: 0 4px 20px rgba(229, 168, 35, 0.16);
 }}
 
 .agent-avatar {{
-  font-size: 1.5rem;
-  background: rgba(99, 102, 241, 0.15);
+  font-size: 1.35rem;
+  background: rgba(229, 168, 35, 0.14);
   width: 44px;
   height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(229, 168, 35, 0.28);
 }}
 
 .agent-info {{
@@ -992,11 +1010,12 @@ body {{
 .agent-name {{
   font-weight: 700;
   font-size: 0.95rem;
+  color: var(--text-main);
 }}
 
 .agent-role {{
   font-size: 0.8rem;
-  color: var(--text-dim);
+  color: var(--text-muted);
   display: block;
   margin-bottom: 0.4rem;
 }}
@@ -1010,8 +1029,15 @@ body {{
 
 .meta-tag {{
   background: rgba(255, 255, 255, 0.06);
-  padding: 0.15rem 0.4rem;
+  padding: 0.15rem 0.45rem;
   border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}}
+
+.meta-load {{
+  color: var(--accent-gold-dim);
+  font-weight: 600;
 }}
 
 .agent-badge {{
@@ -1020,21 +1046,25 @@ body {{
   text-transform: uppercase;
   padding: 0.15rem 0.5rem;
   border-radius: 9999px;
+  letter-spacing: 0.02em;
 }}
 
 .agent-badge.active, .agent-badge.running {{
-  background: rgba(16, 185, 129, 0.2);
-  color: var(--accent-emerald);
+  background: rgba(229, 168, 35, 0.18);
+  color: var(--accent-gold-bright);
+  border: 1px solid rgba(229, 168, 35, 0.45);
 }}
 
 .agent-badge.busy, .agent-badge.rendering {{
-  background: rgba(6, 182, 212, 0.2);
-  color: var(--accent-cyan);
+  background: rgba(217, 119, 6, 0.2);
+  color: #F59E0B;
+  border: 1px solid rgba(217, 119, 6, 0.45);
 }}
 
-.agent-badge.idle {{
-  background: rgba(148, 163, 184, 0.15);
-  color: var(--text-dim);
+.agent-badge.idle, .agent-badge.monitoring {{
+  background: rgba(140, 130, 118, 0.14);
+  color: var(--text-muted);
+  border: 1px solid rgba(140, 130, 118, 0.25);
 }}
 
 /* Center Console: Causal Loop Simulation & Visual Output */
@@ -1051,25 +1081,34 @@ body {{
 }}
 
 .telemetry-card {{
-  background: rgba(17, 27, 49, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-card);
+  border: 1px solid rgba(229, 168, 35, 0.15);
   border-radius: 12px;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
 }}
 
 .telemetry-val {{
   font-size: 2rem;
   font-weight: 800;
-  color: var(--text-main);
   letter-spacing: -0.02em;
 }}
 
-.telemetry-val.cyan {{ color: var(--accent-cyan); }}
-.telemetry-val.emerald {{ color: var(--accent-emerald); }}
-.telemetry-val.indigo {{ color: var(--accent-indigo); }}
+.telemetry-val.gold {{
+  color: var(--accent-gold-bright);
+  text-shadow: 0 0 16px rgba(229, 168, 35, 0.3);
+}}
+
+.telemetry-val.ivory {{
+  color: var(--text-main);
+}}
+
+.telemetry-val.amber {{
+  color: #F59E0B;
+}}
 
 .telemetry-lbl {{
   font-size: 0.8rem;
@@ -1077,15 +1116,16 @@ body {{
 }}
 
 .live-terminal {{
-  background: #04070F;
-  border: 1px solid var(--border-glass);
+  background: var(--terminal-bg);
+  border: 1px solid rgba(229, 168, 35, 0.2);
   border-radius: 12px;
   padding: 1rem;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.85rem;
-  color: #38BDF8;
-  line-height: 1.5;
+  color: var(--terminal-text);
+  line-height: 1.6;
   overflow-y: auto;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7);
 }}
 
 /* Right Panel: Live DAG Execution Milestones */
@@ -1104,22 +1144,22 @@ body {{
 }}
 
 .dag-step.complete .step-indicator {{
-  background: var(--accent-emerald);
-  box-shadow: 0 0 8px var(--accent-emerald);
+  background: var(--accent-gold);
+  box-shadow: 0 0 10px var(--accent-gold);
 }}
 
 .dag-step.running .step-indicator {{
-  background: var(--accent-cyan);
-  box-shadow: 0 0 8px var(--accent-cyan);
+  background: var(--accent-gold-bright);
+  box-shadow: 0 0 12px var(--accent-gold-bright);
   animation: pulse 1.5s infinite;
 }}
 
 .step-content {{
   flex: 1;
-  background: rgba(17, 27, 49, 0.4);
+  background: var(--bg-card);
   padding: 0.75rem;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(229, 168, 35, 0.12);
 }}
 
 .step-header {{
@@ -1131,11 +1171,13 @@ body {{
 .step-title {{
   font-weight: 700;
   font-size: 0.85rem;
+  color: var(--text-main);
 }}
 
 .step-engine {{
   font-size: 0.75rem;
-  color: var(--accent-cyan);
+  color: var(--accent-gold);
+  font-weight: 600;
 }}
 
 .step-state {{
@@ -1147,12 +1189,32 @@ body {{
 <body>
   <div class="hud-menubar">
     <div class="menubar-left">
-      <div class="system-brand">◆ SWARM<span>MOJO</span> // SOVEREIGN-OS</div>
+      <div class="system-brand">
+        <svg class="buzburg-bee-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 26px; height: 26px;">
+          <!-- Outer Hexagon Frame -->
+          <polygon points="32,3 58,18 58,46 32,61 6,46 6,18" stroke="#E5A823" stroke-width="2.5" fill="rgba(35, 29, 25, 0.55)"/>
+          <!-- Geometric Wings (Left Facets) -->
+          <polygon points="18,12 26,22 17,20" fill="#BDB4A8"/>
+          <polygon points="12,17 26,26 15,28" fill="#E5A823"/>
+          <polygon points="14,27 28,32 18,34" fill="#BDB4A8"/>
+          <polygon points="18,34 30,36 22,39" fill="#E5A823"/>
+          <!-- Antennae -->
+          <path d="M40,16 L43,12 M44,18 L48,15" stroke="#FAF8F5" stroke-width="1.8" stroke-linecap="round"/>
+          <!-- Head Hexagon -->
+          <polygon points="36,19 43,15 47,19 47,25 41,28 35,24" fill="#FAF8F5"/>
+          <!-- Abdomen / Torso Stripes (Honey Gold & Charcoal) -->
+          <polygon points="32,28 42,28 38,36 28,36" fill="#E5A823"/>
+          <polygon points="28,37 38,37 36,43 26,43" fill="#362D26" stroke="#E5A823" stroke-width="0.5"/>
+          <polygon points="26,44 36,44 31,52" fill="#E5A823"/>
+        </svg>
+        <span>SWARMOJO <span style="color: var(--accent-gold);">HUD</span></span>
+        <span style="color: var(--text-dim); font-weight: 400; font-size: 0.8rem;">// SOVEREIGN-OS</span>
+      </div>
       <div>Session: 0x8F94-AEON</div>
       <div>Kernel: Native Mojo v25.1</div>
     </div>
     <div class="menubar-right">
-      <div class="live-indicator"><div class="pulse-dot"></div> ORCHESTRATOR ONLINE</div>
+      <div class="live-indicator"><div class="pulse-dot"></div> HIVE ORCHESTRATOR ONLINE</div>
       <div>MEM: 412 MB / 800 TOKENS</div>
       <div>LATENCY: 12 µs</div>
     </div>
@@ -1176,17 +1238,17 @@ body {{
         <div class="telemetry-grid">
           <div class="telemetry-card">
             <span class="telemetry-lbl">SUB-10µs SYMBOL LOOKUPS</span>
-            <span class="telemetry-val cyan">142,800</span>
+            <span class="telemetry-val gold">142,800</span>
             <span class="telemetry-lbl">Symdex In-Memory Speed</span>
           </div>
           <div class="telemetry-card">
             <span class="telemetry-lbl">PARALLEL CONCURRENCY</span>
-            <span class="telemetry-val emerald">99.98%</span>
+            <span class="telemetry-val ivory">99.98%</span>
             <span class="telemetry-lbl">StateFresh OCC Collision-Free</span>
           </div>
           <div class="telemetry-card">
             <span class="telemetry-lbl">ANGULAR TRAJECTORY DRIFT</span>
-            <span class="telemetry-val indigo">4.2°</span>
+            <span class="telemetry-val amber">4.2°</span>
             <span class="telemetry-lbl">Target Threshold &lt; 65°</span>
           </div>
         </div>
@@ -1195,14 +1257,14 @@ body {{
       <div class="glass-panel">
         <div class="panel-header">
           <span class="panel-title">⚡ REAL-TIME HARNESS PIPELINE</span>
-          <span style="font-size: 0.8rem; color: var(--accent-cyan);">TriggerTangle Offline Rehearsal</span>
+          <span style="font-size: 0.8rem; color: var(--accent-gold);">TriggerTangle Offline Rehearsal</span>
         </div>
         <div class="panel-body">
           <div class="live-terminal">
 [00:00:01.004] [AtlasCoordinator] Objective received: Multi-agent studio &amp; coding convergence.
 [00:00:01.018] [FastgateTriage] 256-dim phase vector router mapped tools in 18 µs.
 [00:00:01.042] [DaedalusArchitect] Pi exact substring edit committed with Rewind snapshot #snap-482.
-[00:00:01.065] [VitruviusDesign] Sovereign glassmorphism theme compiled with Impeccable contrast floor.
+[00:00:01.065] [VitruviusDesign] Buzburg honey-gold glassmorphism theme compiled with Impeccable contrast floor.
 [00:00:01.092] [LumiereStudio] Diffusion Flux graph exported for 16:9 4K render.
 [00:00:01.115] [OrwellScribe] Ghost Protocol passed: 0 banned clichés, sentence variance = 8.4.
 [00:00:01.128] [MojoDrift] Angular trajectory: 4.2° (SAFE &lt; 65°). Status: VERIFIED.
@@ -1215,7 +1277,7 @@ body {{
     <div class="glass-panel">
       <div class="panel-header">
         <span class="panel-title">🕸️ ACTIVE TASK DAG</span>
-        <span style="font-size: 0.8rem; color: var(--accent-emerald);">Verified WorkflowProof</span>
+        <span style="font-size: 0.8rem; color: var(--accent-gold);">Verified WorkflowProof</span>
       </div>
       <div class="panel-body">
         {''.join(dag_items)}
@@ -1226,17 +1288,34 @@ body {{
 </html>
 """
 
-        out_file = self.output_dir / "herald_hud.html"
+        # Write to primary swarmojo_hud.html and alias herald_hud.html for compatibility
+        out_file = self.output_dir / "swarmojo_hud.html"
         out_file.write_text(hud_html, encoding="utf-8")
+        legacy_file = self.output_dir / "herald_hud.html"
+        legacy_file.write_text(hud_html, encoding="utf-8")
 
         return {
             "status": "ready",
             "file": str(out_file),
+            "legacy_file": str(legacy_file),
             "system_title": system_title,
             "total_agents": len(roster),
             "total_milestones": len(milestones),
             "html_length": len(hud_html),
         }
+
+    def build_herald_hud(
+        self,
+        system_title: str = "Swarmojo HUD",
+        agents_roster: Optional[List[Dict[str, Any]]] = None,
+        live_dag_milestones: Optional[List[Dict[str, str]]] = None,
+    ) -> Dict[str, Any]:
+        """Backward-compatible alias for build_swarmojo_hud."""
+        return self.build_swarmojo_hud(
+            system_title=system_title,
+            agents_roster=agents_roster,
+            live_dag_milestones=live_dag_milestones,
+        )
 
 
 # -------------------------------------------------------------------------

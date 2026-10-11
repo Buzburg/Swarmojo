@@ -414,12 +414,12 @@ def register_engine_tools(server: FastMCP) -> None:
         return json.dumps(writer.plan_book(title=title, genre=genre, chapters_data=chaps), indent=2)
 
     @server.tool()
-    def design_build_herald_hud(
-        system_title: str = "Swarmojo Herald OS",
+    def design_build_swarmojo_hud(
+        system_title: str = "Swarmojo HUD",
         roster_json: str = "[]",
         milestones_json: str = "[]",
     ) -> str:
-        """Generates an ultra-sleek, deep-blue glassmorphism operating desktop HUD by Buzburg AI."""
+        """Generates an ultra-sleek, Buzburg-themed glassmorphism Swarmojo HUD with honey-gold and dark charcoal palette."""
         from app.engines.design import DesignAgentEngine
         engine = DesignAgentEngine()
         try:
@@ -430,12 +430,25 @@ def register_engine_tools(server: FastMCP) -> None:
             milestones = json.loads(milestones_json) if milestones_json and milestones_json != "[]" else None
         except Exception:
             milestones = None
-        res = engine.build_herald_hud(
+        res = engine.build_swarmojo_hud(
             system_title=system_title,
             agents_roster=roster,
             live_dag_milestones=milestones,
         )
         return json.dumps(res, indent=2)
+
+    @server.tool()
+    def design_build_herald_hud(
+        system_title: str = "Swarmojo HUD",
+        roster_json: str = "[]",
+        milestones_json: str = "[]",
+    ) -> str:
+        """Legacy alias: Generates an ultra-sleek glassmorphism operating desktop HUD by Buzburg AI."""
+        return design_build_swarmojo_hud(
+            system_title=system_title,
+            roster_json=roster_json,
+            milestones_json=milestones_json,
+        )
 
     @server.tool()
     def workflow_run_dag(workflow_id: str, name: str, steps_json: str) -> str:
