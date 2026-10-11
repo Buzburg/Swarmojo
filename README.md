@@ -1,10 +1,10 @@
-# SwarmTangle
+# Swarmojo ⚡
 
 **Will your AI agents burn your budget while overwriting each other's code?**
 
 Agent A refactors an authentication module. Agent B runs a failing test and reverts the file. Agent C attempts a patch, triggers a cyclic linter error, and spawns three subagents. Within four minutes, they have burned $45 in API credits, locked the git working tree, and produced zero working code.
 
-SwarmTangle governs that interaction **before your agents break production**. Run sovereign, local-first multi-agent teams with strict organizational reporting, hard budget circuit-breakers, microsecond Git rollbacks, and Paperclip-grade human approval gates — directly on your own silicon.
+Swarmojo governs that interaction **before your agents break production**. Run sovereign, local-first multi-agent teams with strict organizational reporting, hard budget circuit-breakers, microsecond Git rollbacks, and Paperclip-grade human approval gates — directly on your own silicon.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Runtime: Python + Mojo](https://img.shields.io/badge/Runtime-Python_3.11+_|_Mojo_SIMD_v25+-orange.svg)](app_mojo/)
@@ -13,20 +13,20 @@ SwarmTangle governs that interaction **before your agents break production**. Ru
 [![Tests: Passing](https://img.shields.io/badge/Tests-100%25_Passing-brightgreen.svg)](tests/)
 [![Sister Project: TriggerTangle](https://img.shields.io/badge/Sister_Project-TriggerTangle-purple.svg)](https://github.com/Buzburg/trigger-tangle)
 
-![SwarmTangle HUD — Sovereign Operations Console and Governance Flight Deck](docs/screenshot.png)
+![Swarmojo HUD — Sovereign Operations Console and Governance Flight Deck](docs/screenshot.png)
 
 ---
 
 ## Try it in 5 seconds
 
-**[Open the Live Interactive HUD](https://buzburg.github.io/swarm-tangle/)** (or run [docs/index.html](docs/index.html) locally) — no installation, account, or API key. The flight deck runs offline in your desktop Chromium or Firefox browser.
+**[Open the Live Interactive HUD](https://buzburg.github.io/Swarmojo/)** (or run [docs/index.html](docs/index.html) locally) — no installation, account, or API key. The flight deck runs offline in your desktop Chromium or Firefox browser.
 
 Prefer the CLI?
 
 1. **Clone and test immediately**:
    ```sh
-   git clone https://github.com/Buzburg/swarm-tangle.git
-   cd swarm-tangle
+   git clone https://github.com/Buzburg/Swarmojo.git
+   cd Swarmojo
    python scripts/demo_first_run.py
    ```
 2. **Rehearse an agent task with automated dependency blockers**:
@@ -49,12 +49,12 @@ Prefer the CLI?
 ### No account, no cloud, zero telemetry.
 The harness runs 100% locally on your machine. Your code, system prompts, models, and execution logs never touch a third-party server.
 
-**This is an explicit deterministic governance harness, not an opaque cloud wrapper.** You declare agent roles, budget ceilings, and rollback invariants. SwarmTangle enforces them with mathematical rigor.
+**This is an explicit deterministic governance harness, not an opaque cloud wrapper.** You declare agent roles, budget ceilings, and rollback invariants. Swarmojo enforces them with mathematical rigor.
 
 > [!NOTE]
 > ### Harness vs. HUD: The Architecture
-> - **SwarmTangle (The Harness)**: The headless multi-agent engine running on your silicon. It manages agent lifecycles, runs AST call-graphs, enforces hard budget caps, and triggers microsecond git rollbacks.
-> - **SwarmTangle HUD (The Flight Deck)**: The built-in visual operations console. It is a feature *of* SwarmTangle that runs in your browser to visualize real-time telemetry, Paperclip-grade org charts, Kanban task tracking, and human-in-the-loop approvals.
+> - **Swarmojo (The Harness)**: The headless multi-agent engine running on your silicon. It manages agent lifecycles, runs AST call-graphs, enforces hard budget caps, and triggers microsecond git rollbacks.
+> - **Swarmojo HUD (The Flight Deck)**: The built-in visual operations console. It is a feature *of* Swarmojo that runs in your browser to visualize real-time telemetry, Paperclip-grade org charts, Kanban task tracking, and human-in-the-loop approvals.
 
 ---
 
@@ -92,30 +92,30 @@ graph TD
 
 ---
 
-## SwarmTangle HUD — Sovereign Operations Console
+## Swarmojo ⚡ HUD — Sovereign Operations Console
 
-Styled in the official **Buzburg** brand palette (Honey Gold `#E5A823`, Dark Hive Charcoal `#13110E`, and Crisp Ivory `#FAF8F5`), the **SwarmTangle HUD** provides an interactive Paperclip-grade organizational control plane:
+Styled in the official **Buzburg** brand palette (Honey Gold `#E5A823`, Dark Hive Charcoal `#13110E`, and Crisp Ivory `#FAF8F5`), the **Swarmojo HUD** provides an interactive Paperclip-grade organizational control plane:
 
 | ⚡ 1. Live Operations & Microsecond Telemetry | 🏢 2. Swarm Organizational Hierarchy |
 | :---: | :---: |
-| [![Telemetry](assets/screenshots/swarmtangle_hud_telemetry.png)](assets/screenshots/swarmtangle_hud_telemetry.png) | [![Org Chart](assets/screenshots/swarmtangle_hud_orgchart.png)](assets/screenshots/swarmtangle_hud_orgchart.png) |
+| [![Telemetry](assets/screenshots/swarmojo_hud_telemetry.png)](assets/screenshots/swarmojo_hud_telemetry.png) | [![Org Chart](assets/screenshots/swarmojo_hud_orgchart.png)](assets/screenshots/swarmojo_hud_orgchart.png) |
 | *Sub-microsecond Mojo SIMD kernels, SymNexus AST search (<20µs), and StateEpoch OCC leases.* | *Corporate org chart treating agents as company employees with explicit reporting lines & spend counters.* |
 
 | 📋 3. Goals & Issues Kanban | 💰 4. Budgets & Spend Governance |
 | :---: | :---: |
-| [![Tasks Kanban](assets/screenshots/swarmtangle_hud_tasks.png)](assets/screenshots/swarmtangle_hud_tasks.png) | [![Budgets](assets/screenshots/swarmtangle_hud_budgets.png)](assets/screenshots/swarmtangle_hud_budgets.png) |
+| [![Tasks Kanban](assets/screenshots/swarmojo_hud_tasks.png)](assets/screenshots/swarmojo_hud_tasks.png) | [![Budgets](assets/screenshots/swarmojo_hud_budgets.png)](assets/screenshots/swarmojo_hud_budgets.png) |
 | *Autonomous task delegation with priority tags and automated dependency blockers (`TASK-106` blocked by `TASK-102`).* | *Hard spend caps, token consumption tracking, and automated circuit breakers to kill runaway loops.* |
 
 | 🛡️ 5. Human-in-the-Loop Governance | ⚙️ 6. Harness Scheduler & Connectors |
 | :---: | :---: |
-| [![Approvals](assets/screenshots/swarmtangle_hud_governance.png)](assets/screenshots/swarmtangle_hud_governance.png) | [![Settings](assets/screenshots/swarmtangle_hud_settings.png)](assets/screenshots/swarmtangle_hud_settings.png) |
+| [![Approvals](assets/screenshots/swarmojo_hud_governance.png)](assets/screenshots/swarmojo_hud_governance.png) | [![Settings](assets/screenshots/swarmojo_hud_settings.png)](assets/screenshots/swarmojo_hud_settings.png) |
 | *Zero-bypass authorization queue for git pushes to main and cloud GPU bursts with one-click approve/reject.* | *Pulse heartbeats, 30s/60s scheduler, and BYOA connectors for Claude Code, OpenCode, Codex, and Ollama.* |
 
 ---
 
 ## Use it in an Agent or Build Workflow
 
-SwarmTangle includes a rich CLI suite callable directly or via Model Context Protocol (FastMCP):
+Swarmojo includes a rich CLI suite callable directly or via Model Context Protocol (FastMCP):
 
 ```sh
 # 1. Organization & Hierarchy: View agent seats, managers, and spend
@@ -189,10 +189,10 @@ approval = gov_request_approval(
 
 ## The Buzburg Tangle Suite
 
-SwarmTangle is part of the **Buzburg Tangle Ecosystem** of sovereign, local-first developer tools:
+Swarmojo is part of the **Buzburg Tangle Ecosystem** of sovereign, local-first developer tools:
 
 - 🪢 **[TriggerTangle](https://github.com/Buzburg/trigger-tangle)**: Rehearse how separate *automations* trigger each other. Offline design simulator, causal loop witnesses, and CLI.
-- 🐝 **[SwarmTangle](https://github.com/Buzburg/swarm-tangle)**: Govern how separate *AI agents* trigger and conflict with each other. Offline multi-agent harness, budget circuit breakers, microsecond rollbacks, and HUD.
+- 🐝 **[Swarmojo](https://github.com/Buzburg/Swarmojo)**: Govern how separate *AI agents* trigger and conflict with each other. Offline multi-agent harness, budget circuit breakers, microsecond rollbacks, and HUD.
 
 ---
 

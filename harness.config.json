@@ -1,7 +1,7 @@
 {
-  "name": "SwarmTangle",
+  "name": "Swarmojo",
   "version": "1.0.0",
-  "description": "Govern how autonomous AI agents trigger and conflict with each other. Offline multi-agent harness, budget circuit breakers, microsecond rollbacks, and HUD.",
+  "description": "The blazing-fast, local-first AI agent meta-harness. Sovereign multi-agent swarms on your own silicon with sub-microsecond Mojo SIMD speed (<50µs), Paperclip-grade org governance, and Swarmojo HUD.",
   "stack": {
     "primary": "python",
     "secondary": "mojo",
