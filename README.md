@@ -19,7 +19,7 @@ SwarmTangle governs that interaction **before your agents break production**. Ru
 
 ## Try it in 5 seconds
 
-**[Open the Interactive HUD](docs/hud.html)** — no installation, account, or API key. The flight deck runs offline in your desktop Chromium or Firefox browser.
+**[Open the Live Interactive HUD](https://buzburg.github.io/swarm-tangle/)** (or run [docs/index.html](docs/index.html) locally) — no installation, account, or API key. The flight deck runs offline in your desktop Chromium or Firefox browser.
 
 Prefer the CLI?
 
@@ -50,6 +50,11 @@ Prefer the CLI?
 The harness runs 100% locally on your machine. Your code, system prompts, models, and execution logs never touch a third-party server.
 
 **This is an explicit deterministic governance harness, not an opaque cloud wrapper.** You declare agent roles, budget ceilings, and rollback invariants. SwarmTangle enforces them with mathematical rigor.
+
+> [!NOTE]
+> ### Harness vs. HUD: The Architecture
+> - **SwarmTangle (The Harness)**: The headless multi-agent engine running on your silicon. It manages agent lifecycles, runs AST call-graphs, enforces hard budget caps, and triggers microsecond git rollbacks.
+> - **SwarmTangle HUD (The Flight Deck)**: The built-in visual operations console. It is a feature *of* SwarmTangle that runs in your browser to visualize real-time telemetry, Paperclip-grade org charts, Kanban task tracking, and human-in-the-loop approvals.
 
 ---
 
@@ -93,17 +98,17 @@ Styled in the official **Buzburg** brand palette (Honey Gold `#E5A823`, Dark Hiv
 
 | ⚡ 1. Live Operations & Microsecond Telemetry | 🏢 2. Swarm Organizational Hierarchy |
 | :---: | :---: |
-| [![Telemetry](assets/screenshots/swarmojo_hud_telemetry.png)](assets/screenshots/swarmojo_hud_telemetry.png) | [![Org Chart](assets/screenshots/swarmojo_hud_orgchart.png)](assets/screenshots/swarmojo_hud_orgchart.png) |
+| [![Telemetry](assets/screenshots/swarmtangle_hud_telemetry.png)](assets/screenshots/swarmtangle_hud_telemetry.png) | [![Org Chart](assets/screenshots/swarmtangle_hud_orgchart.png)](assets/screenshots/swarmtangle_hud_orgchart.png) |
 | *Sub-microsecond Mojo SIMD kernels, SymNexus AST search (<20µs), and StateEpoch OCC leases.* | *Corporate org chart treating agents as company employees with explicit reporting lines & spend counters.* |
 
 | 📋 3. Goals & Issues Kanban | 💰 4. Budgets & Spend Governance |
 | :---: | :---: |
-| [![Tasks Kanban](assets/screenshots/swarmojo_hud_tasks.png)](assets/screenshots/swarmojo_hud_tasks.png) | [![Budgets](assets/screenshots/swarmojo_hud_budgets.png)](assets/screenshots/swarmojo_hud_budgets.png) |
+| [![Tasks Kanban](assets/screenshots/swarmtangle_hud_tasks.png)](assets/screenshots/swarmtangle_hud_tasks.png) | [![Budgets](assets/screenshots/swarmtangle_hud_budgets.png)](assets/screenshots/swarmtangle_hud_budgets.png) |
 | *Autonomous task delegation with priority tags and automated dependency blockers (`TASK-106` blocked by `TASK-102`).* | *Hard spend caps, token consumption tracking, and automated circuit breakers to kill runaway loops.* |
 
 | 🛡️ 5. Human-in-the-Loop Governance | ⚙️ 6. Harness Scheduler & Connectors |
 | :---: | :---: |
-| [![Approvals](assets/screenshots/swarmojo_hud_governance.png)](assets/screenshots/swarmojo_hud_governance.png) | [![Settings](assets/screenshots/swarmojo_hud_settings.png)](assets/screenshots/swarmojo_hud_settings.png) |
+| [![Approvals](assets/screenshots/swarmtangle_hud_governance.png)](assets/screenshots/swarmtangle_hud_governance.png) | [![Settings](assets/screenshots/swarmtangle_hud_settings.png)](assets/screenshots/swarmtangle_hud_settings.png) |
 | *Zero-bypass authorization queue for git pushes to main and cloud GPU bursts with one-click approve/reject.* | *Pulse heartbeats, 30s/60s scheduler, and BYOA connectors for Claude Code, OpenCode, Codex, and Ollama.* |
 
 ---
