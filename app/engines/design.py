@@ -747,14 +747,14 @@ td {{
         agents_roster: Optional[List[Dict[str, Any]]] = None,
         live_dag_milestones: Optional[List[Dict[str, str]]] = None,
     ) -> Dict[str, Any]:
-        """Generates an ultra-sleek, Buzburg-themed glassmorphism Swarmojo HUD with honey-gold and dark-charcoal palette, real-time agent telemetry, and DAG milestones."""
+        """Generates an ultra-sleek, Buzburg-themed glassmorphism Swarmojo HUD with Org Chart, Tasks Kanban, Budgets, Approvals, and Settings."""
         roster = agents_roster or [
-            {"id": "atlas", "name": "Atlas", "role": "Meta Coordinator", "status": "active", "load": "12%", "model": "deepseek-r1", "avatar": "⚡"},
-            {"id": "daedalus", "name": "Daedalus", "role": "DeepCode Architect", "status": "busy", "load": "78%", "model": "qwen-coder", "avatar": "🛠️"},
-            {"id": "vitruvius", "name": "Vitruvius", "role": "UI/UX Designer", "status": "idle", "load": "4%", "model": "qwen-coder", "avatar": "🎨"},
-            {"id": "lumiere", "name": "Lumiere", "role": "Studio Director", "status": "rendering", "load": "94%", "model": "flux-dev", "avatar": "🎬"},
-            {"id": "orwell", "name": "Orwell", "role": "Ghost Scribe", "status": "active", "load": "32%", "model": "qwen-coder", "avatar": "✍️"},
-            {"id": "aegis", "name": "Aegis", "role": "Security Auditor", "status": "monitoring", "load": "8%", "model": "llama3", "avatar": "🛡️"},
+            {"id": "atlas", "name": "Atlas", "role": "Swarm Coordinator & Executive Lead", "tier": "executive", "status": "active", "load": "12%", "model": "deepseek-r1", "avatar": "⚡", "spent": "$14.20", "cap": "$80.00"},
+            {"id": "daedalus", "name": "Daedalus", "role": "Principal DeepCode Architect", "tier": "lead", "status": "busy", "load": "78%", "model": "qwen-coder", "avatar": "🛠️", "spent": "$28.50", "cap": "$60.00"},
+            {"id": "vitruvius", "name": "Vitruvius", "role": "Staff UI/UX Systems Designer", "tier": "specialist", "status": "idle", "load": "4%", "model": "qwen-coder", "avatar": "🎨", "spent": "$6.15", "cap": "$40.00"},
+            {"id": "lumiere", "name": "Lumiere", "role": "Studio Director & Multimodal Producer", "tier": "specialist", "status": "rendering", "load": "94%", "model": "flux-dev", "avatar": "🎬", "spent": "$19.40", "cap": "$50.00"},
+            {"id": "orwell", "name": "Orwell", "role": "Lead Ghost Scribe & Technical Writer", "tier": "specialist", "status": "active", "load": "32%", "model": "qwen-coder", "avatar": "✍️", "spent": "$4.80", "cap": "$30.00"},
+            {"id": "aegis", "name": "Aegis", "role": "Chief Security Auditor & Constitutional Guard", "tier": "auditor", "status": "monitoring", "load": "8%", "model": "llama3", "avatar": "🛡️", "spent": "$5.20", "cap": "$40.00"},
         ]
 
         milestones = live_dag_milestones or [
@@ -810,6 +810,7 @@ td {{
 :root {{
   color-scheme: dark;
   --bg-deep: #13110E;
+  --bg-surface: #1A1613;
   --bg-glass: rgba(28, 24, 21, 0.82);
   --bg-card: rgba(38, 32, 27, 0.75);
   --bg-card-hover: rgba(54, 46, 38, 0.92);
@@ -822,6 +823,7 @@ td {{
   --accent-charcoal: #362D26;
   --accent-charcoal-dark: #1E1A17;
   --accent-emerald: #10B981;
+  --accent-red: #EF4444;
   --text-main: #FAF8F5;
   --text-muted: #BDB4A8;
   --text-dim: #8C8276;
@@ -852,7 +854,7 @@ body {{
 /* Top Menu Bar */
 .hud-menubar {{
   height: 48px;
-  background: rgba(19, 17, 15, 0.92);
+  background: rgba(19, 17, 15, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-glass);
@@ -880,16 +882,33 @@ body {{
   font-size: 0.95rem;
 }}
 
-.system-brand span {{
-  font-weight: 800;
-}}
-
 .menubar-right {{
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
   color: var(--text-muted);
   font-size: 0.8rem;
+}}
+
+.btn-heartbeat {{
+  background: rgba(229, 168, 35, 0.15);
+  border: 1px solid var(--border-glow);
+  color: var(--accent-gold-bright);
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}}
+
+.btn-heartbeat:hover {{
+  background: rgba(229, 168, 35, 0.3);
+  box-shadow: 0 0 12px rgba(229, 168, 35, 0.4);
+  transform: scale(1.03);
 }}
 
 .live-indicator {{
@@ -899,7 +918,6 @@ body {{
   color: var(--accent-gold-bright);
   font-weight: 700;
   font-size: 0.8rem;
-  letter-spacing: 0.03em;
 }}
 
 .pulse-dot {{
@@ -917,13 +935,75 @@ body {{
   100% {{ opacity: 1; transform: scale(1); box-shadow: 0 0 12px var(--accent-gold); }}
 }}
 
-/* Main Desktop Workspace */
-.hud-workspace {{
+/* Subnav Navigation Bar (Harness Options Tabs) */
+.hud-subnav {{
+  height: 42px;
+  background: rgba(22, 19, 16, 0.9);
+  border-bottom: 1px solid var(--border-glass);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  gap: 0.5rem;
+  z-index: 90;
+}}
+
+.nav-tab {{
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: all 0.2s ease;
+  height: 100%;
+}}
+
+.nav-tab:hover {{
+  color: var(--text-main);
+  background: rgba(229, 168, 35, 0.06);
+}}
+
+.nav-tab.active {{
+  color: var(--accent-gold-bright);
+  border-bottom-color: var(--accent-gold-bright);
+  background: rgba(229, 168, 35, 0.1);
+  font-weight: 700;
+}}
+
+.badge-counter {{
+  background: #EF4444;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  margin-left: 0.2rem;
+}}
+
+/* View Containers */
+.hud-view {{
+  display: none;
+  flex: 1;
+  padding: 1.25rem;
+  overflow: hidden;
+}}
+
+.hud-view.active {{
+  display: flex;
+  flex-direction: column;
+}}
+
+/* View 1: Telemetry Workspace (3-column layout) */
+.telemetry-layout {{
   flex: 1;
   display: grid;
   grid-template-columns: 340px 1fr 380px;
   gap: 1.25rem;
-  padding: 1.25rem;
   overflow: hidden;
 }}
 
@@ -941,7 +1021,7 @@ body {{
 }}
 
 .panel-header {{
-  padding: 1rem 1.25rem;
+  padding: 0.85rem 1.25rem;
   border-bottom: 1px solid var(--border-glass);
   display: flex;
   justify-content: space-between;
@@ -949,9 +1029,8 @@ body {{
 }}
 
 .panel-title {{
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -964,7 +1043,7 @@ body {{
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.85rem;
 }}
 
 /* Left Column: Agent Swarm Roster */
@@ -997,9 +1076,7 @@ body {{
   border: 1px solid rgba(229, 168, 35, 0.28);
 }}
 
-.agent-info {{
-  flex: 1;
-}}
+.agent-info {{ flex: 1; }}
 
 .agent-name-row {{
   display: flex;
@@ -1017,7 +1094,7 @@ body {{
   font-size: 0.8rem;
   color: var(--text-muted);
   display: block;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.35rem;
 }}
 
 .agent-meta {{
@@ -1046,7 +1123,6 @@ body {{
   text-transform: uppercase;
   padding: 0.15rem 0.5rem;
   border-radius: 9999px;
-  letter-spacing: 0.02em;
 }}
 
 .agent-badge.active, .agent-badge.running {{
@@ -1067,7 +1143,7 @@ body {{
   border: 1px solid rgba(140, 130, 118, 0.25);
 }}
 
-/* Center Console: Causal Loop Simulation & Visual Output */
+/* Center Console */
 .center-viewport {{
   display: grid;
   grid-template-rows: 240px 1fr;
@@ -1102,13 +1178,8 @@ body {{
   text-shadow: 0 0 16px rgba(229, 168, 35, 0.3);
 }}
 
-.telemetry-val.ivory {{
-  color: var(--text-main);
-}}
-
-.telemetry-val.amber {{
-  color: #F59E0B;
-}}
+.telemetry-val.ivory {{ color: var(--text-main); }}
+.telemetry-val.amber {{ color: #F59E0B; }}
 
 .telemetry-lbl {{
   font-size: 0.8rem;
@@ -1184,25 +1255,385 @@ body {{
   font-size: 0.7rem;
   color: var(--text-dim);
 }}
+
+/* View 2: Org Chart Hierarchy */
+.org-container {{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+  padding: 0.5rem;
+}}
+
+.org-level {{
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  position: relative;
+}}
+
+.org-card {{
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 14px;
+  padding: 1.25rem;
+  width: 280px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  position: relative;
+}}
+
+.org-card:hover {{
+  border-color: var(--border-glow);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(229, 168, 35, 0.2);
+}}
+
+.org-tier-tag {{
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--accent-gold-bright);
+  background: rgba(229, 168, 35, 0.15);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}}
+
+.org-card-header {{
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}}
+
+.org-card-avatar {{
+  font-size: 1.8rem;
+  width: 48px;
+  height: 48px;
+  background: rgba(229, 168, 35, 0.15);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(229, 168, 35, 0.3);
+}}
+
+.org-card-name {{
+  font-weight: 800;
+  font-size: 1.05rem;
+}}
+
+.org-card-role {{
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}}
+
+.org-card-stats {{
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.75rem;
+}}
+
+/* View 3: Tasks & Goals Kanban Board */
+.kanban-board {{
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+  overflow-x: auto;
+}}
+
+.kanban-col {{
+  background: rgba(24, 20, 17, 0.75);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}}
+
+.kanban-col-header {{
+  padding: 0.75rem 1rem;
+  background: rgba(35, 29, 25, 0.8);
+  border-bottom: 1px solid var(--border-glass);
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}}
+
+.kanban-col-body {{
+  flex: 1;
+  padding: 0.75rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}}
+
+.kanban-card {{
+  background: var(--bg-card);
+  border: 1px solid rgba(229, 168, 35, 0.15);
+  border-radius: 10px;
+  padding: 0.85rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}}
+
+.kanban-card-top {{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}}
+
+.task-id {{
+  font-size: 0.7rem;
+  font-family: monospace;
+  color: var(--accent-gold);
+  font-weight: 700;
+}}
+
+.task-priority {{
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}}
+
+.task-priority.critical {{ background: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.4); }}
+.task-priority.high {{ background: rgba(245, 158, 11, 0.2); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.4); }}
+.task-priority.medium {{ background: rgba(140, 130, 118, 0.2); color: var(--text-muted); }}
+
+.task-title {{
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+  line-height: 1.3;
+}}
+
+.task-assignee {{
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}}
+
+/* View 4: Budgets & Spend Governance */
+.budget-overview-grid {{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}}
+
+.budget-metric-card {{
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 14px;
+  padding: 1.25rem;
+}}
+
+.progress-track {{
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  margin-top: 0.75rem;
+  overflow: hidden;
+}}
+
+.progress-fill {{
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-gold-dim), var(--accent-gold-bright));
+  border-radius: 9999px;
+}}
+
+.budget-table {{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}}
+
+.budget-table th {{
+  text-align: left;
+  padding: 0.75rem 1rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-glass);
+}}
+
+.budget-table td {{
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}}
+
+/* View 5: Governance & Approvals Queue */
+.approval-list {{
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}}
+
+.approval-card {{
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}}
+
+.approval-card.resolved {{
+  opacity: 0.6;
+  border-color: rgba(255, 255, 255, 0.08);
+}}
+
+.approval-info {{ flex: 1; padding-right: 1.5rem; }}
+
+.approval-header {{
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}}
+
+.approval-type-tag {{
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: rgba(229, 168, 35, 0.15);
+  color: var(--accent-gold-bright);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}}
+
+.approval-actions {{
+  display: flex;
+  gap: 0.65rem;
+}}
+
+.btn-approve {{
+  background: var(--accent-gold);
+  color: #13110E;
+  font-weight: 800;
+  border: none;
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}}
+
+.btn-approve:hover {{
+  background: var(--accent-gold-bright);
+  box-shadow: 0 0 14px rgba(229, 168, 35, 0.5);
+}}
+
+.btn-reject {{
+  background: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+}}
+
+.btn-reject:hover {{
+  background: rgba(239, 68, 68, 0.3);
+}}
+
+/* View 6: Harness Options & Connectors */
+.settings-grid {{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}}
+
+.setting-card {{
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 14px;
+  padding: 1.5rem;
+}}
+
+.setting-row {{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}}
+
+.setting-title {{ font-weight: 700; font-size: 0.9rem; }}
+.setting-desc {{ font-size: 0.78rem; color: var(--text-muted); }}
+
+.segmented-control {{
+  display: flex;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  padding: 0.2rem;
+  border: 1px solid var(--border-glass);
+}}
+
+.seg-btn {{
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+}}
+
+.seg-btn.active {{
+  background: var(--accent-gold);
+  color: #13110E;
+  font-weight: 800;
+}}
+
+.connector-badge {{
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-gold-bright);
+}}
   </style>
 </head>
 <body>
+  <!-- Top Menu Bar -->
   <div class="hud-menubar">
     <div class="menubar-left">
       <div class="system-brand">
         <svg class="buzburg-bee-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 26px; height: 26px;">
-          <!-- Outer Hexagon Frame -->
           <polygon points="32,3 58,18 58,46 32,61 6,46 6,18" stroke="#E5A823" stroke-width="2.5" fill="rgba(35, 29, 25, 0.55)"/>
-          <!-- Geometric Wings (Left Facets) -->
           <polygon points="18,12 26,22 17,20" fill="#BDB4A8"/>
           <polygon points="12,17 26,26 15,28" fill="#E5A823"/>
           <polygon points="14,27 28,32 18,34" fill="#BDB4A8"/>
           <polygon points="18,34 30,36 22,39" fill="#E5A823"/>
-          <!-- Antennae -->
           <path d="M40,16 L43,12 M44,18 L48,15" stroke="#FAF8F5" stroke-width="1.8" stroke-linecap="round"/>
-          <!-- Head Hexagon -->
           <polygon points="36,19 43,15 47,19 47,25 41,28 35,24" fill="#FAF8F5"/>
-          <!-- Abdomen / Torso Stripes (Honey Gold & Charcoal) -->
           <polygon points="32,28 42,28 38,36 28,36" fill="#E5A823"/>
           <polygon points="28,37 38,37 36,43 26,43" fill="#362D26" stroke="#E5A823" stroke-width="0.5"/>
           <polygon points="26,44 36,44 31,52" fill="#E5A823"/>
@@ -1214,53 +1645,80 @@ body {{
       <div>Kernel: Native Mojo v25.1</div>
     </div>
     <div class="menubar-right">
+      <button class="btn-heartbeat" onclick="triggerHeartbeat()" title="Wake specialists and execute pulse">
+        <span>💓</span> Pulse Heartbeat
+      </button>
       <div class="live-indicator"><div class="pulse-dot"></div> HIVE ORCHESTRATOR ONLINE</div>
       <div>MEM: 412 MB / 800 TOKENS</div>
       <div>LATENCY: 12 µs</div>
     </div>
   </div>
 
-  <div class="hud-workspace">
-    <!-- Left Panel: Agent Swarm Roster -->
-    <div class="glass-panel">
-      <div class="panel-header">
-        <span class="panel-title">👥 SPECIALIST ROSTER</span>
-        <span style="font-size: 0.8rem; color: var(--text-dim);">{len(roster)} Agents Active</span>
-      </div>
-      <div class="panel-body">
-        {''.join(roster_cards)}
-      </div>
-    </div>
+  <!-- Subnav Tabs Bar -->
+  <div class="hud-subnav">
+    <button class="nav-tab active" data-tab="telemetry" onclick="switchTab('telemetry')">
+      <span>⚡</span> Live Telemetry
+    </button>
+    <button class="nav-tab" data-tab="orgchart" onclick="switchTab('orgchart')">
+      <span>🏢</span> Swarm Org Chart
+    </button>
+    <button class="nav-tab" data-tab="tasks" onclick="switchTab('tasks')">
+      <span>📋</span> Goals &amp; Tasks
+    </button>
+    <button class="nav-tab" data-tab="budgets" onclick="switchTab('budgets')">
+      <span>💰</span> Budgets &amp; Spend
+    </button>
+    <button class="nav-tab" data-tab="governance" onclick="switchTab('governance')">
+      <span>🛡️</span> Governance &amp; Approvals <span class="badge-counter" id="approvalCount">2</span>
+    </button>
+    <button class="nav-tab" data-tab="settings" onclick="switchTab('settings')">
+      <span>⚙️</span> Harness Options
+    </button>
+  </div>
 
-    <!-- Center Viewport: Telemetry & Interactive Terminal -->
-    <div class="center-viewport">
-      <div class="glass-panel" style="padding: 1.25rem;">
-        <div class="telemetry-grid">
-          <div class="telemetry-card">
-            <span class="telemetry-lbl">SUB-10µs SYMBOL LOOKUPS</span>
-            <span class="telemetry-val gold">142,800</span>
-            <span class="telemetry-lbl">Symdex In-Memory Speed</span>
-          </div>
-          <div class="telemetry-card">
-            <span class="telemetry-lbl">PARALLEL CONCURRENCY</span>
-            <span class="telemetry-val ivory">99.98%</span>
-            <span class="telemetry-lbl">StateFresh OCC Collision-Free</span>
-          </div>
-          <div class="telemetry-card">
-            <span class="telemetry-lbl">ANGULAR TRAJECTORY DRIFT</span>
-            <span class="telemetry-val amber">4.2°</span>
-            <span class="telemetry-lbl">Target Threshold &lt; 65°</span>
-          </div>
-        </div>
-      </div>
-
+  <!-- VIEW 1: Live Telemetry Workspace -->
+  <div id="view-telemetry" class="hud-view active">
+    <div class="telemetry-layout">
+      <!-- Left: Roster -->
       <div class="glass-panel">
         <div class="panel-header">
-          <span class="panel-title">⚡ REAL-TIME HARNESS PIPELINE</span>
-          <span style="font-size: 0.8rem; color: var(--accent-gold);">TriggerTangle Offline Rehearsal</span>
+          <span class="panel-title">👥 SPECIALIST ROSTER</span>
+          <span style="font-size: 0.8rem; color: var(--text-dim);">{len(roster)} Agents Active</span>
         </div>
         <div class="panel-body">
-          <div class="live-terminal">
+          {''.join(roster_cards)}
+        </div>
+      </div>
+
+      <!-- Center: Telemetry Grid & Terminal -->
+      <div class="center-viewport">
+        <div class="glass-panel" style="padding: 1.25rem;">
+          <div class="telemetry-grid">
+            <div class="telemetry-card">
+              <span class="telemetry-lbl">SUB-10µs SYMBOL LOOKUPS</span>
+              <span class="telemetry-val gold">142,800</span>
+              <span class="telemetry-lbl">Symdex In-Memory Speed</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="telemetry-lbl">PARALLEL CONCURRENCY</span>
+              <span class="telemetry-val ivory">99.98%</span>
+              <span class="telemetry-lbl">StateFresh OCC Collision-Free</span>
+            </div>
+            <div class="telemetry-card">
+              <span class="telemetry-lbl">ANGULAR TRAJECTORY DRIFT</span>
+              <span class="telemetry-val amber">4.2°</span>
+              <span class="telemetry-lbl">Target Threshold &lt; 65°</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-panel">
+          <div class="panel-header">
+            <span class="panel-title">⚡ REAL-TIME HARNESS PIPELINE</span>
+            <span style="font-size: 0.8rem; color: var(--accent-gold);">TriggerTangle Offline Rehearsal</span>
+          </div>
+          <div class="panel-body">
+            <div class="live-terminal" id="terminalOutput">
 [00:00:01.004] [AtlasCoordinator] Objective received: Multi-agent studio &amp; coding convergence.
 [00:00:01.018] [FastgateTriage] 256-dim phase vector router mapped tools in 18 µs.
 [00:00:01.042] [DaedalusArchitect] Pi exact substring edit committed with Rewind snapshot #snap-482.
@@ -1268,22 +1726,547 @@ body {{
 [00:00:01.092] [LumiereStudio] Diffusion Flux graph exported for 16:9 4K render.
 [00:00:01.115] [OrwellScribe] Ghost Protocol passed: 0 banned clichés, sentence variance = 8.4.
 [00:00:01.128] [MojoDrift] Angular trajectory: 4.2° (SAFE &lt; 65°). Status: VERIFIED.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: DAG -->
+      <div class="glass-panel">
+        <div class="panel-header">
+          <span class="panel-title">🕸️ ACTIVE TASK DAG</span>
+          <span style="font-size: 0.8rem; color: var(--accent-gold);">Verified WorkflowProof</span>
+        </div>
+        <div class="panel-body">
+          {''.join(dag_items)}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: Swarm Org Chart -->
+  <div id="view-orgchart" class="hud-view">
+    <div class="panel-header" style="margin-bottom: 1rem; border-radius: 12px; background: var(--bg-glass); border: 1px solid var(--border-glass);">
+      <div>
+        <span class="panel-title">🏢 SWARM ORGANIZATIONAL HIERARCHY</span>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Executive reporting lines, specialist tiers, and governance structure</span>
+      </div>
+      <button class="btn-heartbeat" onclick="alert('Hire Specialist: Specify Agent ID, Role, Model, and Budget Cap.')">+ Hire Specialist</button>
+    </div>
+    <div class="org-container">
+      <!-- Tier 1: Executive Lead -->
+      <div class="org-level">
+        <div class="org-card" style="border-color: var(--accent-gold);">
+          <span class="org-tier-tag">Executive</span>
+          <div class="org-card-header">
+            <div class="org-card-avatar">⚡</div>
+            <div>
+              <div class="org-card-name">Atlas</div>
+              <div class="org-card-role">Swarm Coordinator &amp; Executive Lead</div>
+            </div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--accent-gold);">Model: deepseek-r1 • Reports to User / Board</div>
+          <div class="org-card-stats">
+            <span>Spend: $14.20 / $80</span>
+            <span style="color: var(--accent-emerald);">● ACTIVE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tier 2: Specialists & Leads -->
+      <div class="org-level">
+        <div class="org-card">
+          <span class="org-tier-tag">Lead</span>
+          <div class="org-card-header">
+            <div class="org-card-avatar">🛠️</div>
+            <div>
+              <div class="org-card-name">Daedalus</div>
+              <div class="org-card-role">Principal DeepCode Architect</div>
+            </div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Model: qwen-coder • Reports to Atlas</div>
+          <div class="org-card-stats">
+            <span>Spend: $28.50 / $60</span>
+            <span style="color: #F59E0B;">● BUSY</span>
+          </div>
+        </div>
+
+        <div class="org-card">
+          <span class="org-tier-tag">Specialist</span>
+          <div class="org-card-header">
+            <div class="org-card-avatar">🎨</div>
+            <div>
+              <div class="org-card-name">Vitruvius</div>
+              <div class="org-card-role">Staff UI/UX Systems Designer</div>
+            </div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Model: qwen-coder • Reports to Daedalus</div>
+          <div class="org-card-stats">
+            <span>Spend: $6.15 / $40</span>
+            <span style="color: var(--text-muted);">● IDLE</span>
+          </div>
+        </div>
+
+        <div class="org-card">
+          <span class="org-tier-tag">Specialist</span>
+          <div class="org-card-header">
+            <div class="org-card-avatar">🎬</div>
+            <div>
+              <div class="org-card-name">Lumiere</div>
+              <div class="org-card-role">Studio Director &amp; Multimodal</div>
+            </div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Model: flux-dev • Reports to Atlas</div>
+          <div class="org-card-stats">
+            <span>Spend: $19.40 / $50</span>
+            <span style="color: #F59E0B;">● RENDERING</span>
+          </div>
+        </div>
+
+        <div class="org-card">
+          <span class="org-tier-tag">Specialist</span>
+          <div class="org-card-header">
+            <div class="org-card-avatar">✍️</div>
+            <div>
+              <div class="org-card-name">Orwell</div>
+              <div class="org-card-role">Lead Ghost Scribe &amp; Writer</div>
+            </div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Model: qwen-coder • Reports to Atlas</div>
+          <div class="org-card-stats">
+            <span>Spend: $4.80 / $30</span>
+            <span style="color: var(--accent-emerald);">● ACTIVE</span>
+          </div>
+        </div>
+
+        <div class="org-card">
+          <span class="org-tier-tag">Auditor</span>
+          <div class="org-card-header">
+            <div class="org-card-avatar">🛡️</div>
+            <div>
+              <div class="org-card-name">Aegis</div>
+              <div class="org-card-role">Chief Security Auditor</div>
+            </div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Model: llama3 • Autonomous Constitutional Guard</div>
+          <div class="org-card-stats">
+            <span>Spend: $5.20 / $40</span>
+            <span style="color: var(--accent-gold);">● MONITORING</span>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Right Panel: Live DAG Execution Milestones -->
-    <div class="glass-panel">
-      <div class="panel-header">
-        <span class="panel-title">🕸️ ACTIVE TASK DAG</span>
-        <span style="font-size: 0.8rem; color: var(--accent-gold);">Verified WorkflowProof</span>
+  <!-- VIEW 3: Goals & Tasks Kanban -->
+  <div id="view-tasks" class="hud-view">
+    <div class="panel-header" style="margin-bottom: 1rem; border-radius: 12px; background: var(--bg-glass); border: 1px solid var(--border-glass);">
+      <div>
+        <span class="panel-title">📋 GOALS &amp; ISSUES KANBAN BOARD</span>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Autonomous delegation, dependencies, and execution milestones</span>
       </div>
-      <div class="panel-body">
-        {''.join(dag_items)}
+      <button class="btn-heartbeat" onclick="alert('New Task: Enter Title, Assignee, Priority, and Blocking Issue ID.')">+ New Task Issue</button>
+    </div>
+    <div class="kanban-board">
+      <!-- Col 1: Backlog -->
+      <div class="kanban-col">
+        <div class="kanban-col-header"><span>Backlog</span> <span>1</span></div>
+        <div class="kanban-col-body">
+          <div class="kanban-card">
+            <div class="kanban-card-top">
+              <span class="task-id">TASK-105</span>
+              <span class="task-priority medium">Medium</span>
+            </div>
+            <div class="task-title">Ghost Protocol Cadence Polish</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Audit docs for banned AI clichés and ensure sentence cadence variance &gt; 7.0.</div>
+            <div class="task-assignee"><span>✍️</span> Orwell</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Col 2: In Progress -->
+      <div class="kanban-col">
+        <div class="kanban-col-header"><span>In Progress</span> <span>2</span></div>
+        <div class="kanban-col-body">
+          <div class="kanban-card">
+            <div class="kanban-card-top">
+              <span class="task-id">TASK-102</span>
+              <span class="task-priority critical">Critical</span>
+            </div>
+            <div class="task-title">Sub-10µs Symdex In-Memory Warmup</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Preload syntax graph for fastgate triage in native Mojo kernel.</div>
+            <div class="task-assignee"><span>🛠️</span> Daedalus</div>
+          </div>
+          <div class="kanban-card">
+            <div class="kanban-card-top">
+              <span class="task-id">TASK-103</span>
+              <span class="task-priority high">High</span>
+            </div>
+            <div class="task-title">Audit Path Traversal on Device Names</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Run PathSentry checks on COM1, LPT1, and AUX device names.</div>
+            <div class="task-assignee"><span>🛡️</span> Aegis</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Col 3: Blocked -->
+      <div class="kanban-col">
+        <div class="kanban-col-header"><span style="color: #EF4444;">Blocked</span> <span>1</span></div>
+        <div class="kanban-col-body">
+          <div class="kanban-card" style="border-color: rgba(239, 68, 68, 0.4);">
+            <div class="kanban-card-top">
+              <span class="task-id">TASK-106</span>
+              <span class="task-priority critical">Critical</span>
+            </div>
+            <div class="task-title">StateFresh Distributed File Lease OCC</div>
+            <div style="font-size: 0.75rem; color: #EF4444;">⚠️ Blocked by TASK-102 (Symdex Warmup)</div>
+            <div class="task-assignee"><span>🛠️</span> Daedalus</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Col 4: Review -->
+      <div class="kanban-col">
+        <div class="kanban-col-header"><span>Review</span> <span>1</span></div>
+        <div class="kanban-col-body">
+          <div class="kanban-card">
+            <div class="kanban-card-top">
+              <span class="task-id">TASK-104</span>
+              <span class="task-priority medium">Medium</span>
+            </div>
+            <div class="task-title">4K 16:9 Studio Banner Reel</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Render diffusion keyframes for multimodal release assets.</div>
+            <div class="task-assignee"><span>🎬</span> Lumiere</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Col 5: Done -->
+      <div class="kanban-col">
+        <div class="kanban-col-header"><span style="color: var(--accent-emerald);">Done</span> <span>1</span></div>
+        <div class="kanban-col-body">
+          <div class="kanban-card">
+            <div class="kanban-card-top">
+              <span class="task-id">TASK-101</span>
+              <span class="task-priority high">High</span>
+            </div>
+            <div class="task-title">Swarmojo HUD Hive UI Unification</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Align HUD themes and brand tokens with Buzburg honey gold and charcoal.</div>
+            <div class="task-assignee"><span>🎨</span> Vitruvius</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- VIEW 4: Budgets & Spend Governance -->
+  <div id="view-budgets" class="hud-view">
+    <div class="budget-overview-grid">
+      <div class="budget-metric-card">
+        <div style="font-size: 0.8rem; color: var(--text-muted);">TOTAL ORGANIZATION SPEND</div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent-gold-bright); margin-top: 0.25rem;">$78.25 <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 400;">/ $250.00 Hard Cap</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width: 31.3%;"></div></div>
+        <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.4rem;">31.3% of allocated organization budget consumed</div>
+      </div>
+
+      <div class="budget-metric-card">
+        <div style="font-size: 0.8rem; color: var(--text-muted);">TOTAL TOKENS CONSUMED</div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-top: 0.25rem;">4.33M <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 400;">/ 18.0M Limit</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width: 24.1%;"></div></div>
+        <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.4rem;">Avg prompt cost: $0.000018 / 1k tokens</div>
+      </div>
+
+      <div class="budget-metric-card">
+        <div style="font-size: 0.8rem; color: var(--text-muted);">RUNAWAY LOOP CIRCUIT BREAKER</div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent-emerald); margin-top: 0.25rem;">ACTIVE <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 400;">(Safe)</span></div>
+        <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.8rem;">Auto-kills recursive agent loops exceeding 15 iterative turns</div>
+      </div>
+    </div>
+
+    <div class="glass-panel" style="flex: 1;">
+      <div class="panel-header">
+        <span class="panel-title">💰 PER-AGENT BUDGET &amp; TOKEN ALLOCATION</span>
+        <button class="btn-heartbeat" onclick="alert('Budgets reset to baseline limits.')">Reset Spend Counters</button>
+      </div>
+      <div style="overflow-y: auto; flex: 1; padding: 0.5rem 1rem;">
+        <table class="budget-table">
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Role</th>
+              <th>Current Spend</th>
+              <th>Cap</th>
+              <th>Utilization</th>
+              <th>Tokens Used</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>⚡ Atlas</strong></td>
+              <td>Executive Coordinator</td>
+              <td style="color: var(--accent-gold); font-weight: 700;">$14.20</td>
+              <td>$80.00</td>
+              <td><div class="progress-track" style="width: 120px;"><div class="progress-fill" style="width: 17.8%;"></div></div></td>
+              <td>720,000</td>
+              <td><span class="agent-badge active">NORMAL</span></td>
+            </tr>
+            <tr>
+              <td><strong>🛠️ Daedalus</strong></td>
+              <td>Principal DeepCode Architect</td>
+              <td style="color: var(--accent-gold); font-weight: 700;">$28.50</td>
+              <td>$60.00</td>
+              <td><div class="progress-track" style="width: 120px;"><div class="progress-fill" style="width: 47.5%;"></div></div></td>
+              <td>1,850,000</td>
+              <td><span class="agent-badge busy">NORMAL</span></td>
+            </tr>
+            <tr>
+              <td><strong>🎨 Vitruvius</strong></td>
+              <td>Staff UI/UX Designer</td>
+              <td style="color: var(--accent-gold); font-weight: 700;">$6.15</td>
+              <td>$40.00</td>
+              <td><div class="progress-track" style="width: 120px;"><div class="progress-fill" style="width: 15.4%;"></div></div></td>
+              <td>310,000</td>
+              <td><span class="agent-badge idle">NORMAL</span></td>
+            </tr>
+            <tr>
+              <td><strong>🎬 Lumiere</strong></td>
+              <td>Studio Director</td>
+              <td style="color: var(--accent-gold); font-weight: 700;">$19.40</td>
+              <td>$50.00</td>
+              <td><div class="progress-track" style="width: 120px;"><div class="progress-fill" style="width: 38.8%;"></div></div></td>
+              <td>950,000</td>
+              <td><span class="agent-badge busy">NORMAL</span></td>
+            </tr>
+            <tr>
+              <td><strong>✍️ Orwell</strong></td>
+              <td>Lead Ghost Scribe</td>
+              <td style="color: var(--accent-gold); font-weight: 700;">$4.80</td>
+              <td>$30.00</td>
+              <td><div class="progress-track" style="width: 120px;"><div class="progress-fill" style="width: 16.0%;"></div></div></td>
+              <td>240,000</td>
+              <td><span class="agent-badge active">NORMAL</span></td>
+            </tr>
+            <tr>
+              <td><strong>🛡️ Aegis</strong></td>
+              <td>Chief Security Auditor</td>
+              <td style="color: var(--accent-gold); font-weight: 700;">$5.20</td>
+              <td>$40.00</td>
+              <td><div class="progress-track" style="width: 120px;"><div class="progress-fill" style="width: 13.0%;"></div></div></td>
+              <td>260,000</td>
+              <td><span class="agent-badge active">NORMAL</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 5: Governance & Approvals Queue -->
+  <div id="view-governance" class="hud-view">
+    <div class="panel-header" style="margin-bottom: 1.5rem; border-radius: 12px; background: var(--bg-glass); border: 1px solid var(--border-glass);">
+      <div>
+        <span class="panel-title">🛡️ HUMAN-IN-THE-LOOP AUTHORIZATION QUEUE</span>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">High-stakes actions gated by constitutional security rules</span>
+      </div>
+      <div style="font-size: 0.8rem; color: var(--accent-gold);">Zero-bypass policy active</div>
+    </div>
+
+    <div class="approval-list">
+      <!-- Item 1: Git Push -->
+      <div class="approval-card" id="card-APPR-401">
+        <div class="approval-info">
+          <div class="approval-header">
+            <span class="approval-type-tag">git_push</span>
+            <span style="font-weight: 700;">Push release commits directly to origin/main</span>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">Requested by <strong>🛠️ Daedalus</strong> (Principal Architect)</div>
+          <div style="font-size: 0.75rem; color: var(--text-dim); background: rgba(0, 0, 0, 0.4); padding: 0.4rem 0.6rem; border-radius: 6px;">
+            Target: <code>https://github.com/Buzburg/Swarmojo.git (branch: main)</code> • Commits: 3 • Verified: WorkflowProof #VP-892
+          </div>
+        </div>
+        <div class="approval-actions" id="actions-APPR-401">
+          <button class="btn-approve" onclick="resolveApproval('APPR-401', 'Approved git push to origin/main.')">✓ Approve Push</button>
+          <button class="btn-reject" onclick="resolveApproval('APPR-401', 'Rejected by administrator.', false)">✗ Reject</button>
+        </div>
+      </div>
+
+      <!-- Item 2: GPU Cloud Spend -->
+      <div class="approval-card" id="card-APPR-402">
+        <div class="approval-info">
+          <div class="approval-header">
+            <span class="approval-type-tag">api_spend</span>
+            <span style="font-weight: 700;">Allocate $15.00 GPU cloud burst for 60s video diffusion render</span>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">Requested by <strong>🎬 Lumiere</strong> (Studio Director)</div>
+          <div style="font-size: 0.75rem; color: var(--text-dim); background: rgba(0, 0, 0, 0.4); padding: 0.4rem 0.6rem; border-radius: 6px;">
+            Provider: Flux-Dev-Cloud • Spend: $15.00 USD • Resolution: 3840x2160 (4K 60fps)
+          </div>
+        </div>
+        <div class="approval-actions" id="actions-APPR-402">
+          <button class="btn-approve" onclick="resolveApproval('APPR-402', 'Approved $15.00 GPU spend.')">✓ Approve Spend</button>
+          <button class="btn-reject" onclick="resolveApproval('APPR-402', 'Rejected budget allocation.', false)">✗ Reject</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 6: Harness Options & Connectors -->
+  <div id="view-settings" class="hud-view">
+    <div class="settings-grid">
+      <!-- Card 1: Scheduling & Concurrency -->
+      <div class="setting-card">
+        <div class="panel-title" style="margin-bottom: 1rem;">⚙️ HARNESS SCHEDULER &amp; EXECUTION</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">Heartbeat Frequency</div>
+            <div class="setting-desc">Interval at which dormant specialists wake to check blockers</div>
+          </div>
+          <div class="segmented-control">
+            <button class="seg-btn" onclick="selectSeg(this)">30s</button>
+            <button class="seg-btn active" onclick="selectSeg(this)">60s</button>
+            <button class="seg-btn" onclick="selectSeg(this)">5m</button>
+            <button class="seg-btn" onclick="selectSeg(this)">Manual</button>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">Concurrency Engine</div>
+            <div class="setting-desc">Conflict resolution protocol for parallel file edits</div>
+          </div>
+          <div class="segmented-control">
+            <button class="seg-btn active" onclick="selectSeg(this)">StateFresh OCC</button>
+            <button class="seg-btn" onclick="selectSeg(this)">Strict Mutex</button>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">Auto-Rollback on Failure</div>
+            <div class="setting-desc">Instantly restore previous Rewind snapshot on test breakage</div>
+          </div>
+          <span style="color: var(--accent-emerald); font-weight: 700; font-size: 0.8rem;">ENABLED</span>
+        </div>
+
+        <div class="setting-row" style="border-bottom: none;">
+          <div>
+            <div class="setting-title">PathSentry Device Guard</div>
+            <div class="setting-desc">Block Windows reserved device path traversal (COM/AUX/LPT)</div>
+          </div>
+          <span style="color: var(--accent-emerald); font-weight: 700; font-size: 0.8rem;">ACTIVE</span>
+        </div>
+      </div>
+
+      <!-- Card 2: BYOA Connectors -->
+      <div class="setting-card">
+        <div class="panel-title" style="margin-bottom: 1rem;">🔌 BRING YOUR OWN AGENT (BYOA) CONNECTORS</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">Native Mojo v25.1 Kernel</div>
+            <div class="setting-desc">Sub-10µs symbol lookup and vector math acceleration</div>
+          </div>
+          <div class="connector-badge"><div class="pulse-dot"></div> ACTIVE</div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">Claude Code CLI Adapter</div>
+            <div class="setting-desc">External CLI worker bridge at <code>http://localhost:5210/agent</code></div>
+          </div>
+          <div class="connector-badge"><div class="pulse-dot"></div> CONNECTED</div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">OpenCode Subagent Bridge</div>
+            <div class="setting-desc">Multi-file refactoring adapter at <code>http://localhost:5211/agent</code></div>
+          </div>
+          <div class="connector-badge"><div class="pulse-dot"></div> CONNECTED</div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">Ollama Local Inference</div>
+            <div class="setting-desc">Air-gapped offline model endpoint at <code>http://localhost:11434</code></div>
+          </div>
+          <div class="connector-badge"><div class="pulse-dot"></div> READY</div>
+        </div>
+
+        <div class="setting-row" style="border-bottom: none;">
+          <div>
+            <div class="setting-title">Codex Engine Bridge</div>
+            <div class="setting-desc">Sandboxed test generation endpoint at <code>http://localhost:5212</code></div>
+          </div>
+          <div class="connector-badge"><div class="pulse-dot"></div> CONNECTED</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching
+    function switchTab(tabId) {{
+      document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.querySelector(`.nav-tab[data-tab="${{tabId}}"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      document.querySelectorAll('.hud-view').forEach(v => v.classList.remove('active'));
+      const targetView = document.getElementById('view-' + tabId);
+      if (targetView) targetView.classList.add('active');
+    }}
+
+    // Heartbeat pulse trigger
+    function triggerHeartbeat() {{
+      const btn = document.querySelector('.btn-heartbeat');
+      btn.style.transform = 'scale(0.95)';
+      setTimeout(() => btn.style.transform = 'scale(1)', 150);
+
+      const term = document.getElementById('terminalOutput');
+      if (term) {{
+        const now = new Date().toISOString().substring(11, 23);
+        const log = `\\n[${{now}}] [HeartbeatPulse] Broadcast dispatched to 6 active specialists in 8 µs. All blocker states refreshed.`;
+        term.innerText += log;
+        term.scrollTop = term.scrollHeight;
+      }}
+    }}
+
+    // Approval resolution
+    function resolveApproval(itemId, message, approved = true) {{
+      const card = document.getElementById('card-' + itemId);
+      const actions = document.getElementById('actions-' + itemId);
+      if (card && actions) {{
+        card.classList.add('resolved');
+        const color = approved ? 'var(--accent-emerald)' : '#EF4444';
+        const label = approved ? '✓ AUTHORIZED' : '✗ REJECTED';
+        actions.innerHTML = `<span style="font-weight: 800; font-size: 0.85rem; color: ${{color}};">${{label}}</span>`;
+      }}
+
+      // Decrement counter
+      const counter = document.getElementById('approvalCount');
+      if (counter) {{
+        let count = parseInt(counter.innerText) || 0;
+        if (count > 0) count--;
+        counter.innerText = count;
+        if (count === 0) counter.style.display = 'none';
+      }}
+
+      // Log to terminal
+      const term = document.getElementById('terminalOutput');
+      if (term) {{
+        const now = new Date().toISOString().substring(11, 23);
+        term.innerText += `\\n[${{now}}] [Governance] ${{itemId}} ${{message}} Action resolved by HumanAdmin.`;
+        term.scrollTop = term.scrollHeight;
+      }}
+    }}
+
+    // Segmented control toggle
+    function selectSeg(btn) {{
+      const parent = btn.parentElement;
+      parent.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }}
+  </script>
 </body>
 </html>
 """

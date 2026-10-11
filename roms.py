@@ -243,6 +243,36 @@ def run_entry():
             res = assistant.inspect_voice_contract()
             print(json.dumps(res, indent=2))
         raise SystemExit(0)
+    elif len(sys.argv) > 1 and sys.argv[1] in ("gov", "governance", "control"):
+        import json
+        from app.engines.governance import HarnessGovernanceEngine
+        gov = HarnessGovernanceEngine()
+        subcmd = sys.argv[2] if len(sys.argv) > 2 else "summary"
+        if subcmd == "org":
+            print(json.dumps(gov.get_org_chart(), indent=2))
+        elif subcmd == "budget":
+            print(json.dumps(gov.get_budget_summary(), indent=2))
+        elif subcmd == "tasks":
+            print(json.dumps(gov.list_tasks(), indent=2))
+        elif subcmd == "approvals":
+            print(json.dumps(gov.list_approvals(), indent=2))
+        elif subcmd == "heartbeat":
+            target = sys.argv[3] if len(sys.argv) > 3 else None
+            print(json.dumps(gov.trigger_heartbeat(agent_id=target), indent=2))
+        elif subcmd == "approve":
+            aid = sys.argv[3] if len(sys.argv) > 3 else "APPR-401"
+            print(json.dumps(gov.resolve_approval(approval_id=aid, action="approve"), indent=2))
+        elif subcmd == "settings":
+            print(json.dumps(gov.get_settings(), indent=2))
+        else:
+            summary = {
+                "org": gov.get_org_chart(),
+                "budgets": gov.get_budget_summary(),
+                "pending_approvals": len(gov.list_approvals(pending_only=True)),
+                "settings": gov.get_settings(),
+            }
+            print(json.dumps(summary, indent=2))
+        raise SystemExit(0)
     elif len(sys.argv) > 1 and sys.argv[1] == "meta":
         from app.meta.cli import main as meta_main
         raise SystemExit(meta_main(sys.argv[2:]))

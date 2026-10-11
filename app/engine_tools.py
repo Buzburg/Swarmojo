@@ -499,6 +499,117 @@ def register_engine_tools(server: FastMCP) -> None:
         assistant = PersonalAssistantEngine()
         return json.dumps(assistant.store_credential(key_name=key_name, secret_val=secret_val), indent=2)
 
+    # -------------------------------------------------------------------------
+    # Harness Governance, Org Chart, Budgets, Heartbeats & Approvals
+    # -------------------------------------------------------------------------
+
+    @server.tool()
+    def harness_get_org_chart() -> str:
+        """Retrieves company organizational hierarchy, reporting lines, and headcount."""
+        from app.engines.governance import HarnessGovernanceEngine
+        engine = HarnessGovernanceEngine()
+        return json.dumps(engine.get_org_chart(), indent=2)
+
+    @server.tool()
+    def harness_hire_agent(
+        agent_id: str,
+        name: str,
+        role: str,
+        tier: str = "specialist",
+        reports_to: str = "atlas",
+        model: str = "deepseek-r1",
+        budget_cap_usd: float = 30.0,
+        avatar: str = "🤖",
+    ) -> str:
+        """Hires a new agent into the organizational hierarchy with budget and reporting lines."""
+        from app.engines.governance import HarnessGovernanceEngine
+        engine = HarnessGovernanceEngine()
+        return json.dumps(
+            engine.hire_agent(
+                agent_id=agent_id,
+                name=name,
+                role=role,
+                tier=tier,
+                reports_to=reports_to,
+                model=model,
+                budget_cap_usd=budget_cap_usd,
+                avatar=avatar,
+            ),
+            indent=2,
+        )
+
+    @server.tool()
+    def harness_get_budgets() -> str:
+        """Returns budget spending summaries, hard caps, and token usage per agent."""
+        from app.engines.governance import HarnessGovernanceEngine
+        engine = HarnessGovernanceEngine()
+        return json.dumps(engine.get_budget_summary(), indent=2)
+
+    @server.tool()
+    def harness_trigger_heartbeat(agent_id: str = "") -> str:
+        """Dispatches an on-demand heartbeat pulse to wake agents and trigger pending work."""
+        from app.engines.governance import HarnessGovernanceEngine
+        engine = HarnessGovernanceEngine()
+        aid = agent_id.strip() if agent_id.strip() else None
+        return json.dumps(engine.trigger_heartbeat(agent_id=aid), indent=2)
+
+    @server.tool()
+    def harness_list_tasks() -> str:
+        """Returns task issues organized by Kanban columns (backlog, in_progress, blocked, review, done)."""
+        from app.engines.governance import HarnessGovernanceEngine
+        engine = HarnessGovernanceEngine()
+        return json.dumps(engine.list_tasks(), indent=2)
+
+    @server.tool()
+    def harness_create_task(
+        task_id: str,
+        title: str,
+        description: str,
+        assignee_id: str = "atlas",
+        priority: str = "medium",
+        blocked_by_json: str = "[]",
+    ) -> str:
+        """Creates a new goal or task issue with priority and blocking dependencies."""
+        from app.engines.governance import HarnessGovernanceEngine
+        engine = HarnessGovernanceEngine()
+        try:
+            blocked_by = json.loads(blocked_by_json)
+        except Exception:
+            blocked_by = []
+        return json.dumps(
+            engine.create_task(
+                task_id=task_id,
+                title=title,
+                description=description,
+                assignee_id=assignee_id,
+                priority=priority,
+                blocked_by=blocked_by,
+            ),
+            indent=2,
+        )
+
+    @server.tool()
+    def harness_list_approvals(pending_only: bool = True) -> str:
+        """Lists gated actions requiring human authorization (git pushes, deploys, large spends)."""
+        from app.engines.governance import HarnessGovernanceEngine
+        engine = HarnessGovernanceEngine()
+        return json.dumps(engine.list_approvals(pending_only=pending_only), indent=2)
+
+    @server.tool()
+    def harness_resolve_approval(approval_id: str, action: str = "approve", approver: str = "HumanAdmin") -> str:
+        """Approves or rejects a gated action."""
+        from app.engines.governance import HarnessGovernanceEngine
+        engine = HarnessGovernanceEngine()
+        return json.dumps(engine.resolve_approval(approval_id=approval_id, action=action, approver=approver), indent=2)
+
+    @server.tool()
+    def harness_get_settings() -> str:
+        """Returns runtime harness options including BYOA connectors and concurrency modes."""
+        from app.engines.governance import HarnessGovernanceEngine
+        engine = HarnessGovernanceEngine()
+        return json.dumps(engine.get_settings(), indent=2)
+
+
 
 
 

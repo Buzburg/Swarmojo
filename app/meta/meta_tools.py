@@ -2,7 +2,11 @@
 from __future__ import annotations
 
 import json
-from fastmcp import FastMCP
+
+try:
+    from fastmcp import FastMCP
+except ImportError:
+    FastMCP = None  # type: ignore
 
 from app.meta.harness import MetaHarness
 from app.meta.builder import AgentBuilder, EnvironmentBuilder

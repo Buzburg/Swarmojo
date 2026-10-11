@@ -138,3 +138,31 @@ def test_design_engine_build_herald_hud_alias(tmp_path: Path):
     content = legacy_file.read_text(encoding="utf-8")
     assert "SWARMOJO" in content
 
+
+def test_harness_governance_engine(tmp_path: Path):
+    from app.engines.governance import HarnessGovernanceEngine
+    gov = HarnessGovernanceEngine(workspace_root=str(tmp_path))
+    org = gov.get_org_chart()
+    assert org["total_headcount"] == 6
+    assert len(org["edges"]) >= 4
+
+    budgets = gov.get_budget_summary()
+    assert budgets["total_spend_usd"] > 0
+    assert budgets["organization_hard_cap_usd"] == 250.0
+
+    tasks = gov.list_tasks()
+    assert len(tasks["in_progress"]) >= 2
+    assert len(tasks["blocked"]) >= 1
+
+    approvals = gov.list_approvals(pending_only=True)
+    assert len(approvals) >= 2
+
+    # Resolve approval
+    res = gov.resolve_approval(approvals[0]["id"], action="approve", approver="TestAdmin")
+    assert res["decision"] == "approved"
+    assert res["status"] == "resolved"
+
+    # Heartbeat
+    hb = gov.trigger_heartbeat()
+    assert hb["agents_woken_count"] == 6
+
