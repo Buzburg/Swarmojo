@@ -1,329 +1,196 @@
-# Swarmojo ⚡
+# SwarmTangle
 
-### *The blazing-fast, local-first AI agent meta-harness. Run sovereign multi-agent super-swarms on your own silicon with sub-microsecond Mojo SIMD speed (<50µs), fleet herd immunity, self-healing Git rollbacks, and zero cloud lock-in.*
+**Will your AI agents burn your budget while overwriting each other's code?**
+
+Agent A refactors an authentication module. Agent B runs a failing test and reverts the file. Agent C attempts a patch, triggers a cyclic linter error, and spawns three subagents. Within four minutes, they have burned $45 in API credits, locked the git working tree, and produced zero working code.
+
+SwarmTangle governs that interaction **before your agents break production**. Run sovereign, local-first multi-agent teams with strict organizational reporting, hard budget circuit-breakers, microsecond Git rollbacks, and Paperclip-grade human approval gates — directly on your own silicon.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Runtime: Mojo + Python](https://img.shields.io/badge/Runtime-Mojo_SIMD_v25+_|_Python_3.11+-orange.svg)](app_mojo/)
-[![Architecture: Local--First Meta--Harness](https://img.shields.io/badge/Architecture-Sovereign_Meta--Harness-emerald.svg)](docs/meta_agent_comparison.md)
-[![Tests: 100% Passing](https://img.shields.io/badge/Tests-100%25_Passing-brightgreen.svg)](tests/)
-[![Author: Buzburg AI](https://img.shields.io/badge/Author-Buzburg_AI-purple.svg)](mailto:buzburgai@gmail.com)
+[![Runtime: Python + Mojo](https://img.shields.io/badge/Runtime-Python_3.11+_|_Mojo_SIMD_v25+-orange.svg)](app_mojo/)
+[![Governance: Paperclip--Grade](https://img.shields.io/badge/Governance-Paperclip--Grade-gold.svg)](docs/meta_agent_comparison.md)
+[![Privacy: 100% Offline](https://img.shields.io/badge/Privacy-100%25_Offline_|_Zero_Cloud-emerald.svg)](#no-account-no-cloud-zero-telemetry)
+[![Tests: Passing](https://img.shields.io/badge/Tests-100%25_Passing-brightgreen.svg)](tests/)
+[![Sister Project: TriggerTangle](https://img.shields.io/badge/Sister_Project-TriggerTangle-purple.svg)](https://github.com/Buzburg/trigger-tangle)
 
-> [!NOTE]
-> ### ⚡ In Plain English: Stop Burning Hours on Fragile AI Agents — Run a Sovereign Super-Swarm on Your Own Silicon
->
-> If you have ever tried running local multi-agent systems, you already know the frustration:
-> 1. **They are agonizingly slow**: 3 to 10 seconds wasted per tool step just parsing JSON, launching subprocesses, and waiting on sluggish runtimes.
-> 2. **They burn through VRAM and money**: Context windows get suffocated with massive compiler logs and repetitive shell commands.
-> 3. **They destroy code**: One hallucinating agent overwrites another's files or triggers an endless circular failure loop of repeating the exact same error.
-> 4. **They trap you in cloud silos**: Proprietary platform fees, vendor rate limits, and zero offline privacy.
->
-> **Swarmojo changes all of that instantly.**
->
-> Built by **Buzburg AI** from the bare metal up, Swarmojo is the **fastest local-first AI agent meta-harness on Earth**. Powered by **30+ sovereign intelligence engines** and accelerated by **native Mojo SIMD compute kernels** running in **sub-microseconds (<50 µs)**, Swarmojo turns any laptop or local workstation into a world-class autonomous agency:
->
-> - 🧠 **Fleet Herd Immunity**: The moment *any* agent solves a bug, it instantly broadcasts an immunity signature across the entire fleet memory. Your agents *never make the same mistake twice*.
-> - ⚡ **Blistering Mojo Acceleration**: Tool candidate triage in **12 nanoseconds**, in-memory code symbol lookup in **<20 µs**, and parallel tool batch dispatch that makes agent actions feel instantaneous.
-> - 🛡️ **Zero-Risk Git Micro-Checkpoints**: `GitGuard` and `DeltaRewind` capture microsecond snapshots before every edit. If a test fails or code breaks, your working tree auto-heals and reverts in under 5ms.
-> - 📐 **Mathematical Drift Guardrails**: Phase-space 256-dimensional trajectory tracking ($\theta < 65^\circ$ safe, $\ge 80^\circ$ blocked) guarantees agents never veer off course or hallucinate wild changes.
-> - 👥 **6 Ready-to-Deploy Specialist Guilds**: Coding with binary disassembly, Impeccable Design with optical glassmorphism, Multimodal Studio with cinematic optics and Flux/SDXL graph compilation, Human Prose Writing that strips 200+ AI clichés, 8-stage Constitutional Workflow DAGs, and a 24/7 encrypted Voice Assistant.
->
-> **Try it in 5 seconds flat with zero installation, zero GPUs, and zero network required:**
-> ```sh
-> python -I -S -B scripts/demo_first_run.py
-> ```
+![SwarmTangle HUD — Sovereign Operations Console and Governance Flight Deck](docs/screenshot.png)
 
 ---
 
-## 🐝 Swarmojo HUD — Sovereign Operations Console
+## Try it in 5 seconds
 
-Styled in the official **Buzburg** brand palette (Honey Gold, Dark Hive Charcoal, and Crisp Ivory) and powered by sub-microsecond Mojo telemetry, the **Swarmojo HUD** provides an interactive **Paperclip-grade organizational control plane** to orchestrate, budget, and govern autonomous multi-agent teams on your own silicon.
+**[Open the Interactive HUD](docs/hud.html)** — no installation, account, or API key. The flight deck runs offline in your desktop Chromium or Firefox browser.
 
-### ⚡ 1. Live Operations & Microsecond Telemetry
-*Real-time specialist telemetry, in-memory SymNexus symbol search (<20µs), StateEpoch OCC concurrency, and TriggerTangle offline rehearsal pipeline.*
+Prefer the CLI?
 
-<p align="center">
-  <img src="assets/screenshots/swarmojo_hud_telemetry.png" alt="Swarmojo HUD Live Telemetry" width="100%">
-</p>
+1. **Clone and test immediately**:
+   ```sh
+   git clone https://github.com/Buzburg/swarm-tangle.git
+   cd swarm-tangle
+   python scripts/demo_first_run.py
+   ```
+2. **Rehearse an agent task with automated dependency blockers**:
+   ```sh
+   python roms.py gov tasks
+   ```
+3. **Inspect the live corporate hierarchy and active spend**:
+   ```sh
+   python roms.py gov org
+   ```
+4. **Trigger a human-governed approval gate before dangerous actions**:
+   ```sh
+   python roms.py gov approvals
+   ```
+5. **Enforce hard budget caps and kill runaway recursive loops**:
+   ```sh
+   python roms.py gov budget
+   ```
 
-### 🏢 2. Swarm Organizational Hierarchy (Org Chart)
-*Corporate-grade org chart treating agents as company employees with explicit reporting lines, model backends, tier tags (Executive, Lead, Specialist, Auditor), and live spend counters.*
+### No account, no cloud, zero telemetry.
+The harness runs 100% locally on your machine. Your code, system prompts, models, and execution logs never touch a third-party server.
 
-<p align="center">
-  <img src="assets/screenshots/swarmojo_hud_orgchart.png" alt="Swarm Org Chart" width="100%">
-</p>
-
-### 📋 3. Goals & Issues Kanban Board
-*Autonomous task delegation board with priority tagging, agent assignments, and automated dependency blockers (e.g. `TASK-106` blocked by `TASK-102`).*
-
-<p align="center">
-  <img src="assets/screenshots/swarmojo_hud_tasks.png" alt="Goals and Tasks Kanban Board" width="100%">
-</p>
-
-### 💰 4. Budgets & Spend Governance
-*Firm financial controls with organization hard caps, token consumption tracking, and automated circuit breakers to kill runaway recursive loops.*
-
-<p align="center">
-  <img src="assets/screenshots/swarmojo_hud_budgets.png" alt="Budgets and Spend Governance" width="100%">
-</p>
-
-### 🛡️ 5. Human-in-the-Loop Governance & Approvals
-*Zero-bypass authorization queue for high-stakes autonomous operations (git pushes to main, cloud GPU bursts) with one-click **✓ Approve** / **✗ Reject**.*
-
-<p align="center">
-  <img src="assets/screenshots/swarmojo_hud_governance.png" alt="Human-in-the-Loop Governance" width="100%">
-</p>
-
-### ⚙️ 6. Harness Scheduler & BYOA Connectors
-*Heartbeat frequency controls (30s, 60s, 5m, Manual), instant **💓 Pulse Heartbeat** triggering, and Bring-Your-Own-Agent adapters for Claude Code, OpenCode, Codex, Ollama, and native Mojo.*
-
-<p align="center">
-  <img src="assets/screenshots/swarmojo_hud_settings.png" alt="Harness Options and Connectors" width="100%">
-</p>
+**This is an explicit deterministic governance harness, not an opaque cloud wrapper.** You declare agent roles, budget ceilings, and rollback invariants. SwarmTangle enforces them with mathematical rigor.
 
 ---
 
-## The Core Pillars of Swarmojo
+## What makes this useful?
 
-Swarmojo unifies five foundational pillars into a cohesive, zero-cloud architecture:
+- **Hard budgets, not polite prompts.** When an agent hits its spend cap or token ceiling, the harness physically halts execution with an automated circuit breaker. It doesn't ask the LLM nicely to stop.
+- **Microsecond Git rollbacks (`GitGuard`).** `GitGuard` captures content-addressed delta snapshots before every file modification. If an agent fails a syntax check or breaks a unit test, your working tree auto-heals and reverts in under 5 milliseconds.
+- **Fleet herd immunity (`HerdImmunityRegistry`).** When any agent solves an environmental bug (e.g. POSIX `fcntl` on Windows, SQLite locks, API rate limits), it signs an immunity hash into fleet memory. Other agents never repeat the same failure.
+- **Explicit corporate reporting.** Agents operate under a defined organizational hierarchy (Executive &rarr; Lead &rarr; Specialist &rarr; Auditor). Subagents cannot hire other subagents without an assigned budget and explicit manager authorization.
+- **Zero-bypass human approval.** High-stakes operations — pushing to `main`, executing destructive commands (`rm -rf`, `DROP TABLE`), or leasing remote GPU clusters — block immediately in an interactive authorization queue.
+- **Sub-microsecond Mojo acceleration.** Core bottleneck operations (symbol call-graphs, token clamping, step hashing, PhaseGate vector routing) run through native Mojo SIMD kernels in `<50 µs`, not sluggish Python loops.
 
-```
-┌──────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                 SWARMOJO META-HARNESS                                       │
-├───────────────────────────────┬───────────────────────────────┬──────────────────────────────┤
-│       1. SPECIALIST GUILDS    │     2. HIGH-SPEED ENGINES     │      3. FLEET IMMUNITY       │
-│  • Coding Agent (AST/Binary)  │  • SymNexus Symbol Index (<20µ│  • Herd Immunity Registry    │
-│  • Design Agent (Canvas/Glass)│  • TitanDelta Neural Memory   │  • Dedup Execution Cache     │
-│  • Studio Agent (Director/Opti│  • PhaseGate Vector Router    │  • Desktop Automation Bridge │
-│  • Writer Agent (Anti-Slop)   │  • Sieve Compaction (95%+)    │  • Omnipresent Quick Router  │
-│  • Workflow Agent (DAG/Proofs)│  • StateEpoch Atomic OCC      │  • Terminal Press Engine     │
-│  • Assistant Agent (24/7 VAD) │  • TaskHorizon DAG Breakers   │  • Parallel Tool Dispatcher  │
-├───────────────────────────────┴───────────────────────────────┴──────────────────────────────┤
-│                         NATIVE MOJO SIMD ACCELERATION (app_mojo/*.mojo)                      │
-│        Sub-microsecond FNV-1a Hashing • 2D Bounding Clamping • Exact Substring Search        │
-└──────────────────────────────────────────────────────────────────────────────────────────────┘
+---
+
+## How It Works: Causal Governance Architecture
+
+```mermaid
+graph TD
+    User([User Prompt / High-Level Goal]) --> Exec[Executive Agent]
+    Exec --> Gov[Swarm Governance Engine]
+    Gov --> BudgetCheck{Budget & Cap OK?}
+    BudgetCheck -- Exceeded --> CircuitHalt[⚡ Automated Circuit Breaker Halt]
+    BudgetCheck -- Approved --> Lead[Lead Specialist Agent]
+    Lead --> DepCheck{Task Dependencies Clear?}
+    DepCheck -- Blocked --> BlockHalt[⏳ Suspended on Predecessor Task]
+    DepCheck -- Ready --> GitSnap[🛡️ GitGuard Micro-Snapshot <1ms]
+    GitSnap --> Action[Execute Tool Step / Code Edit]
+    Action --> Verify{Tests & Invariants Pass?}
+    Verify -- Failed --> Rollback[⏪ GitGuard Auto-Rollback <5ms]
+    Rollback --> Immunity[🧠 Herd Immunity Broadcasts Remedy]
+    Verify -- Passed --> ApprovalCheck{Requires Human Gate?}
+    ApprovalCheck -- Yes --> Queue[🔒 Human-in-the-Loop Queue]
+    ApprovalCheck -- No --> Merkle[📜 ProofGraph SHA-256 Commit]
 ```
 
-1. **Autonomous Specialist Guilds**: Six fully realized agent engines (Coding, Studio, Design, Writer, Workflow, Assistant) operating concurrently or in structured pipelines across local models.
-2. **30+ Specialized Local Engines**: Microsecond AST search (`SymNexus`), test-time neural memory (`TitanDelta`), streaming log compaction (`Sieve`), and optimistic concurrency leases (`StateEpoch`).
-3. **Fleet Herd Immunity & Infrastructure**: Distributed error inoculation (`HerdImmunityRegistry`), deduplicated command caching (`DeduplicatedExecutionCache`), high-speed desktop interaction (`DesktopAutomationBridge`), concurrent execution (`ParallelToolDispatcher`), and omnipresent action dispatching (`OmnipresentDispatcher`).
-4. **Native Mojo Hardware Acceleration**: Compiles compute-heavy vector similarity, string clamping, and cryptographic step verification into native machine code.
-5. **PolyHarness Universal Portability**: Transpiles a single-source configuration (`harness.config.json`) to Claude Code, Cursor, DeepSeek, and AGY with zero vendor lock-in.
+---
+
+## SwarmTangle HUD — Sovereign Operations Console
+
+Styled in the official **Buzburg** brand palette (Honey Gold `#E5A823`, Dark Hive Charcoal `#13110E`, and Crisp Ivory `#FAF8F5`), the **SwarmTangle HUD** provides an interactive Paperclip-grade organizational control plane:
+
+| ⚡ 1. Live Operations & Microsecond Telemetry | 🏢 2. Swarm Organizational Hierarchy |
+| :---: | :---: |
+| [![Telemetry](assets/screenshots/swarmojo_hud_telemetry.png)](assets/screenshots/swarmojo_hud_telemetry.png) | [![Org Chart](assets/screenshots/swarmojo_hud_orgchart.png)](assets/screenshots/swarmojo_hud_orgchart.png) |
+| *Sub-microsecond Mojo SIMD kernels, SymNexus AST search (<20µs), and StateEpoch OCC leases.* | *Corporate org chart treating agents as company employees with explicit reporting lines & spend counters.* |
+
+| 📋 3. Goals & Issues Kanban | 💰 4. Budgets & Spend Governance |
+| :---: | :---: |
+| [![Tasks Kanban](assets/screenshots/swarmojo_hud_tasks.png)](assets/screenshots/swarmojo_hud_tasks.png) | [![Budgets](assets/screenshots/swarmojo_hud_budgets.png)](assets/screenshots/swarmojo_hud_budgets.png) |
+| *Autonomous task delegation with priority tags and automated dependency blockers (`TASK-106` blocked by `TASK-102`).* | *Hard spend caps, token consumption tracking, and automated circuit breakers to kill runaway loops.* |
+
+| 🛡️ 5. Human-in-the-Loop Governance | ⚙️ 6. Harness Scheduler & Connectors |
+| :---: | :---: |
+| [![Approvals](assets/screenshots/swarmojo_hud_governance.png)](assets/screenshots/swarmojo_hud_governance.png) | [![Settings](assets/screenshots/swarmojo_hud_settings.png)](assets/screenshots/swarmojo_hud_settings.png) |
+| *Zero-bypass authorization queue for git pushes to main and cloud GPU bursts with one-click approve/reject.* | *Pulse heartbeats, 30s/60s scheduler, and BYOA connectors for Claude Code, OpenCode, Codex, and Ollama.* |
 
 ---
 
-## Sovereign Engines Directory
+## Use it in an Agent or Build Workflow
 
-Every engine in Swarmojo is available via Python in `app/engines/`, terminal CLI via `python swarmmojo.py <command>`, FastMCP via `app/meta/meta_tools.py`, and native Mojo kernels in `app_mojo/`:
+SwarmTangle includes a rich CLI suite callable directly or via Model Context Protocol (FastMCP):
 
-| Engine | Primary Capability & Performance Metric | CLI Command | FastMCP Tool |
-| :--- | :--- | :--- | :--- |
-| **SymNexus** | In-memory bidirectional symbol call-graph index (<20 µs) | `python swarmmojo.py symnexus` | `symnexus_query` |
-| **TitanDelta** | Test-Time Neural Associative Memory with momentum & surprise gating | `python swarmmojo.py titandelta` | `titandelta_memory_update` |
-| **CodeReview** | Multi-perspective AST security, performance & reliability audit | `python swarmmojo.py coding review` | `coding_review_code` |
-| **BinaryAnalysis** | Magic header parsing (ELF, PE, Mach-O, WASM) & bytecode disassembly | `python swarmmojo.py coding inspect` | `coding_inspect_binary` |
-| **CodeLedger** | Hierarchical symbol codemap & transactional atomic change rollback | `python swarmmojo.py coding codemap` | `coding_repo_codemap` |
-| **FastSearch** | Sub-millisecond workspace regex grep & noise-filtered file discovery | `python swarmmojo.py search` | `coding_grep` |
-| **GitGuard** | Sub-millisecond git micro-checkpoints with automatic rollback on test failures | `python swarmmojo.py git-guard` | `rewind_snapshot_workspace` |
-| **ParallelDispatcher** | High-throughput concurrent multi-tool executor with error isolation | `python swarmmojo.py parallel` | `meta_dispatch_quick_action` |
-| **HerdImmunity** | Swarm herd immunity memory broadcasting instant bug remedies | `python swarmmojo.py meta immunity` | `meta_immunity_check` |
-| **DedupCache** | Deduplicated shell command execution with memory TTL hashing | `python swarmmojo.py meta dedup` | `meta_dedup_run` |
-| **DesktopBridge** | Sub-50ms deterministic desktop automation with boundary safety | `python swarmmojo.py meta desktop` | `meta_desktop_action` |
-| **Omnipresent** | Omnipresent floating desktop action dispatcher & clipboard bridge | `python swarmmojo.py meta dispatch` | `meta_dispatch_quick_action` |
-| **TerminalPress** | Terminal typography with rounded Unicode cards, tables & badges | `python swarmmojo.py meta press` | `meta_publish_report` |
-| **VisualCanvas** | Layered digital canvas composer with preset dimensions & export spec | `python swarmmojo.py design canvas` | `design_craft_canvas` |
-| **OpticalGlass** | Optical glassmorphism tokens, backdrop blur & refraction index CSS | `python swarmmojo.py design glass` | `design_liquid_glass` |
-| **SceneDirector** | Cinematic shot board planning, camera moves & production bible | `python swarmmojo.py studio director` | `studio_plan_shot` |
-| **DiffusionBridge** | Compiles production-ready diffusion node execution graphs (Flux/SDXL) | `python swarmmojo.py studio graph` | `studio_export_diffusion_graph` |
-| **VideoTimeline** | Multi-track timeline layout & broadcast -14 LUFS loudness normalization | `python swarmmojo.py studio timeline` | `studio_export_timeline` |
-| **VisualVerdict** | Reasoning-driven visual quality scoring & render cost index detector | `python swarmmojo.py studio verdict` | `studio_verdict_score` |
-| **PhaseGate** | 256-dim phase vector System-1 tool triage router (<50 µs) | `python swarmmojo.py phasegate` | `phasegate_triage_tools` |
-| **Mojo-Drift** | 256-dim angular trajectory tracking (warn $\ge 65^\circ$, block $\ge 80^\circ$) | `python swarmmojo.py drift` | `drift_evaluate_action` |
-| **Sieve** | Streaming compiler & terminal log compaction (95%+ noise reduction) | `python swarmmojo.py sieve` | `sieve_compact_logs` |
-| **StateEpoch** | Optimistic concurrency control (OCC), version leases & CAS commits | `python swarmmojo.py state-epoch` | `state_epoch_check` |
-| **ProofGraph** | Step SHA-256 Merkle fingerprinting & cryptographic transition caching | `python swarmmojo.py proofgraph` | `proofgraph_verify_step` |
-| **DeltaRewind** | Content-addressed workspace snapshotting & microsecond delta rollback | `python swarmmojo.py rewind` | `delta_rewind_rollback` |
-| **SnapScratchpad** | VRAM-capped rolling structured scratchpad (<800 tokens) | `python swarmmojo.py scratchpad` | `snap_scratchpad` |
-| **PathSentry** | Path traversal, case-collision & Windows reserved name auditor | `python swarmmojo.py pathsentry` | `pathsentry_audit` |
-| **CognitiveShield** | Execution shield hazard scoring, regex filters & cyclic loop breaker | `python swarmmojo.py shield` | `cognitive_shield_forecast` |
-| **ParetoTriad** | Pareto reliability, duration, and token cost multi-objective ranking | `python swarmmojo.py triad` | `pareto_triad_evaluate` |
-| **TaskHorizon** | State-machine task DAG graph & anti-loop circuit breaker | `python swarmmojo.py horizon` | `task_horizon_record` |
-| **ToolMender** | JSON auto-repair, balance extraction & schema coercion | `python swarmmojo.py toolmender` | `toolmender_repair_output` |
-| **Writer-Engine** | Ghost Protocol anti-slop filters, cadence audits & book DAG planner | `python swarmmojo.py writer` | `writer_audit_prose` |
-| **Workflow-Engine** | 8-stage constitutional pipeline governance & routine scheduler | `python swarmmojo.py workflow` | `workflow_run_dag` |
-| **Assistant-Engine** | 24/7 sovereign companion, encrypted vault & real-time voice VAD | `python swarmmojo.py assistant` | `assistant_get_briefing` |
+```sh
+# 1. Organization & Hierarchy: View agent seats, managers, and spend
+python roms.py gov org
 
----
+# 2. Budgets & Token Caps: View financial guardrails and circuit breaker limits
+python roms.py gov budget
 
-## Meta-Agent Architecture Comparison: Swarmojo vs Conventional Frameworks
+# 3. Tasks & Blockers: Inspect active agent assignments and dependency graphs
+python roms.py gov tasks
 
-For our deep architectural whitepaper, see [docs/meta_agent_comparison.md](docs/meta_agent_comparison.md).
+# 4. Human-in-the-Loop Approvals: Authorize or reject pending high-risk actions
+python roms.py gov approvals
 
-| Architectural Dimension | **Swarmojo (Buzburg AI)** | **Conventional Cloud Orchestrators** | **Generic CLI Seat Wrappers** |
-| :--- | :--- | :--- | :--- |
-| **Primary Philosophy** | Sub-millisecond local-first meta-harness with native Mojo SIMD acceleration | Cloud-hosted ticketing, multi-tier enterprise web app & remote deployment runner | Multi-seat terminal wrapper & basic CLI subprocess manager |
-| **Core Runtime** | **Mojo (SIMD v25+)** + **Python 3.11+** hybrid engine | Heavyweight Node.js, GraphQL, PostgreSQL web stacks | Basic Node/Python CLI subprocess supervisor |
-| **Decision / Tool Latency** | **< 50 microseconds** (native `fastgate_core.mojo` PhaseGate) | 150 – 500 ms (database queries & network hops) | 80 – 300 ms (subprocess creation & IPC pipes) |
-| **Native Compiler Kernels** | **40+ Native Mojo kernels** (`app_mojo/*.mojo`) | None (JavaScript V8 / Node.js) | None (Standard CPython / V8) |
-| **Fleet Herd Immunity** | **Herd Immunity Registry**: Instant broadcast of solved error remedies | None (Every agent repeats identical mistakes) | None (Terminal re-runs failing commands) |
-| **Execution Deduplication** | **Dedup Cache**: Memory-hashed TTL runner (<1 µs lookup) | None (Expensive queries repeat indefinitely) | None (Repeated manual command execution) |
-| **Desktop Automation** | **Desktop Bridge**: Sub-50ms deterministic OS click/type | None (Requires external cloud browser VMs) | None (Limited to CLI shell subprocesses) |
-| **Trajectory Drift & Safety** | **Deterministic 256-dim phase-space geometry** (<65° safe, ≥80° blocked) | Prompt-based system guidelines only | Fixed max-iteration counters & tool timeouts |
-| **Memory Architecture** | **TitanDelta (Titans DeltaNet)** (fast/slow weights) + **SnapScratchpad** + **HMS Simd** | Flat conversation rows in remote SQL tables | In-memory message arrays / raw JSON logs |
-| **Concurrency Model** | **StateEpoch (StateFresh OCC)** (Atomic CAS, read-set validation, epoch commits) | Remote SQL row locks / database transactions | Sequential command queues / filesystem race hazards |
-| **Rollback & Reversibility** | **Microsecond snapshot restore** (`DeltaRewind` & `GitCheckpointGuard`) | Remote git branch resets via web APIs | Manual developer terminal interrupts |
-| **Model Heterogeneity** | **Any local** (Ollama, LM Studio, vLLM, Native, RWKV7) + **Cloud** (Sovereign endpoints) | Locked to cloud vendor APIs | Relies on external proprietary CLI binaries |
-| **Specialized Agent Guilds** | **6 Complete Guilds**: Coding, Studio, Design, Writer, Workflow, Assistant | Generic worker seats assigned tickets | Generalist terminal agents |
-| **Harness Portability** | **PolyHarness**: Compiles zero-dependency configs for Claude Code, Cursor, DeepSeek, AGY | Proprietary cloud platform lock-in | Fixed single CLI format |
-| **UI / Desktop Experience** | **Sovereign HUD**: Deep-blue glassmorphism, real-time kernel telemetry, canvas builders | Generic web SaaS dashboard | Text-only terminal table view |
-| **Formal Mathematical Proofs**| **ProofGraph (WorkflowProof)**: Cryptographic Merkle invariants and transition proofs | None | None |
+# 5. Heartbeat Engine: Pulse active agents and advance pending work
+python roms.py gov heartbeat
+```
+
+### FastMCP Tool Integration
+
+Every engine and governance function is exposed as a standardized FastMCP tool for your agent:
+
+```python
+from app.engine_tools import gov_org_chart, gov_budgets, gov_tasks, gov_request_approval
+
+# Check organizational hierarchy before delegating
+org_info = gov_org_chart()
+
+# Queue a high-risk operation for human sign-off
+approval = gov_request_approval(
+    agent_id="agent-coding-lead",
+    action="git_push",
+    details="Pushing commit dd456f3 to origin/main",
+    urgency="high"
+)
+```
 
 ---
 
 ## The Six Specialist Agent Guilds
 
-### 1. Supercharged Coding Agent (`PiCodingToolkit`)
-- **Automated Multi-Perspective Code Review (`CodeReviewEngine`)**: Analyzes code and diffs across security, performance, reliability, and code craft. Detects arbitrary execution (`eval`, `exec`), credential leaks, and algorithmic bottlenecks with automated patch suggestions.
-- **Binary & Bytecode Analysis (`BinaryAnalysisEngine`)**: Inspects compiled executable headers (ELF, PE, Mach-O, WASM) and disassembles Python bytecode to audit instruction flow.
-- **Transactional Code Ledger & Codemap (`CodeLedgerEngine`)**: Extracts project-wide symbol hierarchies and maintains atomic multi-file staging with rollback verification.
-- **Fast Search Engine (`FastSearchEngine`)**: Sub-millisecond workspace regex pattern matching that automatically skips build directories, virtual environments, and binary files.
-- **Git Micro-Checkpoint Guard (`GitCheckpointGuard`)**: Takes microsecond snapshots before code edits and rolls back immediately if tests or syntax checks fail.
-- **Exact Substring Editing (`edit_file_exact`)**: Unambiguous string replacement coupled with pre-mutation Rewind snapshots.
-- **Recursive Subagent Reflection (`PrimeRecursionEngine`)**: Single, parallel, and chained subagent execution with `{previous}` output piping and strict depth governance.
-
-### 2. High-Craft Design Agent (`DesignAgentEngine`)
-- **Visual Canvas Composer (`VisualCanvasEngine`)**: Creates digital graphics with blend modes, coordinate layouts, and presets for App Icons (1024x1024), OpenGraph Banners (1200x630), and Hero Graphics (1920x1080).
-- **Optical Glass Material (`OpticalGlassMaterial`)**: Specular highlight tokens, backdrop blur CSS, and dynamic optical refraction rendering.
-- **Impeccable Typography & Contrast (`DesignTokens`)**: Enforces WCAG AAA contrast ratios ($\ge 7:1$) and typographic rhythm ($65\text{--}75\text{ch}$ measure).
-- **Full Landing Page & GUI Dashboard Generators**: Generates responsive dark-mode landing pages and admin dashboards persisted to `.mojo_design/`.
-
-### 3. Multimodal Studio Agent (`StudioAgentEngine`)
-- **Directorial Scene Director (`SceneDirectorEngine`)**: Plans camera angles, focal lengths, camera movements (crane sweeps, tracking push-ins), casting asset catalogs, and compiles complete production bibles.
-- **Broadcast Video Timeline (`VideoTimelineEngine`)**: Multi-track video, dialogue, SFX, and BGM layout with broadcast-standard `-14 LUFS` loudness normalization.
-- **Visual Quality Verdicts (`VisualVerdictEngine`)**: Evaluates composition, lighting style, and render cost indices before triggering GPU cycles.
-- **Diffusion Graph Bridge (`DiffusionGraphBridge`)**: Compiles optimized execution graphs for text-to-image (Flux Dev / SDXL) and image-to-video pipelines.
-
-### 4. Authentic Prose Writer Agent (`WriterAgentEngine`)
-- **Ghost Protocol Anti-Slop Audit (`ProseHumanizer.audit_text`)**: Flags over 200 statistically overrepresented AI clichés (`delve into`, `testament to`, `rich tapestry`, `multifaceted`).
-- **Cadence & Sentence Length Variance**: Measures rhythmic variation to eliminate robotic, uniform LLM paragraphs.
-- **Multi-Chapter Book DAG Planner (`BookOutlinePlanner`)**: Breaks long-form novels and non-fiction books into structured chapter outlines with target word budgets and character drivers.
-
-### 5. Constitutional Workflow Automation Agent (`WorkflowPipeline`)
-- **8-Stage Constitutional Pipeline**: Turn governance, automatic risk classification (LOW to CRITICAL), destructive command blocking (`rm -rf`, disk wipes, SQL drops), StateEpoch pre-execution leases, and PhaseGate dispatch.
-- **ProofGraph Cryptographic Verification**: Deterministic SHA-256 Merkle proofs for every step.
-- **Routine Background Scheduler (`WorkflowRoutineScheduler`)**: Schedules recurring maintenance, test audits, and repository regressions in `.mojo_workflows/`.
-
-### 6. Sovereign Personal Assistant Agent (`PersonalAssistantEngine`)
-- **Persistent 24/7 Companion**: Tracks active desk context and daily priorities in `.mojo_assistant/`.
-- **Encrypted Personal Vault (`AssistantVault`)**: Stores credentials and sensitive preferences with SHA-256 protection.
-- **Specialist Consult Gateway (`ConsultGateway`)**: Translates high-level user intents into delegated specialist tasks.
-- **Realtime Voice & Audio Bridge (`RealtimeVoiceBridge`)**: 16kHz PCM input -> Voice Captain -> 24kHz PCM output with RMS energy-gated VAD and barge-in interruption.
+1. **Supercharged Coding Agent (`PiCodingToolkit`)**: Multi-perspective AST review, ELF/PE/Mach-O binary header parsing, hierarchical symbol codemaps, sub-millisecond workspace regex grep, and exact substring editing with pre-mutation rewind snapshots.
+2. **High-Craft Design Agent (`DesignAgentEngine`)**: Visual canvas composition, optical liquid glassmorphism tokens, backdrop blur CSS, and WCAG AAA contrast enforcement ($\ge 7:1$).
+3. **Multimodal Studio Agent (`StudioAgentEngine`)**: Directorial scene planning, multi-track timeline layout with `-14 LUFS` broadcast loudness normalization, visual quality scoring, and Flux/SDXL diffusion graph generation.
+4. **Authentic Prose Writer Agent (`WriterAgentEngine`)**: Ghost Protocol anti-slop engine stripping 200+ statistical AI clichés (`delve into`, `rich tapestry`, `testament to`), sentence cadence variance auditing, and multi-chapter book DAG planning.
+5. **Constitutional Workflow Agent (`WorkflowPipeline`)**: 8-stage constitutional DAG pipelines, automatic risk classification, destructive command blocking, and cryptographic SHA-256 Merkle proofs.
+6. **Sovereign Personal Assistant Agent (`PersonalAssistantEngine`)**: Persistent local desk context, SHA-256 encrypted personal credentials vault, specialist consult gateway, and 16kHz PCM real-time voice bridge with barge-in interruption.
 
 ---
 
-## Meta Harness Fleet Operations & Ubiquitous Control
+## Sovereign Engines Directory
 
-Swarmojo provides groundbreaking infrastructure to keep agent swarms resilient and accessible across your entire operating system:
-
-### 🛡️ Fleet Herd Immunity (`HerdImmunityRegistry`)
-When any specialist agent in your swarm encounters and debugs an error (e.g. POSIX `fcntl` on Windows, SQLite locks, timeout backoffs), it generates a signed **Immunity Signature**. The immunity is broadcast across peer swarm memory: the moment another agent hits a matching error pattern, it immediately applies the verified remedy, preventing duplicate failure loops.
-
-### ⚡ Deduplicated Execution Cache (`DeduplicatedExecutionCache`)
-Expensive terminal inspections, system probes, and git statuses are hashed and cached in-memory with configurable TTLs. Eliminates redundant tool execution and slashes subagent latency to sub-microseconds.
-
-### 🚀 Parallel Tool Dispatcher (`ParallelToolDispatcher`)
-Executes batches of independent agent operations concurrently across a lightweight thread pool with microsecond overhead, per-task timeout enforcement, and failure isolation. Delivers 3x–8x execution speedups for read-heavy and diagnostic agent tasks.
-
-### 🖥️ Desktop Automation Bridge (`DesktopAutomationBridge`)
-Allows agents to perform deterministic mouse clicks, keyboard text input, window focusing, and atomic multi-step action sequences with sub-50ms execution, screen boundary clamping, and dry-run safety modes.
-
-### 🌐 Omnipresent Desktop Router (`OmnipresentDispatcher`)
-A floating companion that monitors the global system clipboard and instantly routes captured text to specialist quick-actions (`explain_code`, `review_diff`, `humanize_prose`, `render_banner`, `plan_video_shot`).
-
-### 📰 Terminal Printing Press (`TerminalPressEngine`)
-Renders breathtaking Unicode card boxes, aligned data tables, key-value blocks, and ANSI status badges directly in your terminal.
+| Engine | Primary Capability & Performance Metric | CLI Command | FastMCP Tool |
+| :--- | :--- | :--- | :--- |
+| **Governance** | Paperclip-grade org chart, budgets, tasks Kanban & approvals | `python roms.py gov org` | `gov_org_chart` |
+| **SymNexus** | In-memory bidirectional symbol call-graph index (<20 µs) | `python roms.py symnexus` | `symnexus_query` |
+| **TitanDelta** | Test-Time Neural Associative Memory with surprise gating | `python roms.py titandelta` | `titandelta_memory_update` |
+| **GitGuard** | Sub-millisecond git micro-checkpoints with auto-rollback | `python roms.py git-guard` | `rewind_snapshot_workspace` |
+| **HerdImmunity** | Swarm herd immunity memory broadcasting instant bug remedies | `python roms.py meta immunity` | `meta_immunity_check` |
+| **DedupCache** | Deduplicated shell command execution with memory TTL hashing | `python roms.py meta dedup` | `meta_dedup_run` |
+| **PhaseGate** | 256-dim phase vector System-1 tool triage router (<50 µs) | `python roms.py phasegate` | `phasegate_triage_tools` |
+| **Mojo-Drift** | 256-dim angular trajectory tracking (warn $\ge 65^\circ$, block $\ge 80^\circ$) | `python roms.py drift` | `drift_evaluate_action` |
+| **Sieve** | Streaming compiler & terminal log compaction (95%+ noise reduction) | `python roms.py sieve` | `sieve_compact_logs` |
+| **StateEpoch** | Optimistic concurrency control (OCC), version leases & CAS commits | `python roms.py state-epoch` | `state_epoch_check` |
+| **ProofGraph** | Step SHA-256 Merkle fingerprinting & cryptographic transition caching | `python roms.py proofgraph` | `proofgraph_verify_step` |
+| **DeltaRewind** | Content-addressed workspace snapshotting & microsecond delta rollback | `python roms.py rewind` | `delta_rewind_rollback` |
+| **TaskHorizon** | State-machine task DAG graph & anti-loop circuit breaker | `python roms.py horizon` | `task_horizon_record` |
+| **ToolMender** | JSON auto-repair, balance extraction & schema coercion | `python roms.py toolmender` | `toolmender_repair_output` |
 
 ---
 
-## Native Mojo SIMD Compute Kernels (`app_mojo/`)
+## The Buzburg Tangle Suite
 
-Compute-critical inner loops are implemented in native Mojo:
+SwarmTangle is part of the **Buzburg Tangle Ecosystem** of sovereign, local-first developer tools:
 
-```mojo
-// app_mojo/immunity_core.mojo - Fast 64-bit FNV-1a error hashing & pattern search
-def hash_error_signature(error_type: String, error_msg: String) -> UInt64:
-    var h: UInt64 = FNV_OFFSET_BASIS_64
-    // Microsecond byte-level FNV-1a hashing...
-    return h
-```
-
-- **`immunity_core.mojo`**: Sub-microsecond error signature hashing and byte-level pattern matching.
-- **`desktop_core.mojo`**: Hardware coordinate boundary clamping and 2D bounding box collision detection.
-- **`dedup_core.mojo`**: Deterministic command key hashing and TTL epoch eviction validation.
-- **`coding_core.mojo`**: Sub-microsecond exact substring location and unique occurrence verification.
-- **`fastgate_core.mojo`**: 256-dimensional phase-vector System-1 tool triage routing (<50 µs).
-- **`drift_core.mojo`**: 256-dimensional angular trajectory drift calculation.
-- **`statefresh_core.mojo`**: Atomic compare-and-swap (CAS) validation and OCC commit checks.
+- 🪢 **[TriggerTangle](https://github.com/Buzburg/trigger-tangle)**: Rehearse how separate *automations* trigger each other. Offline design simulator, causal loop witnesses, and CLI.
+- 🐝 **[SwarmTangle](https://github.com/Buzburg/swarm-tangle)**: Govern how separate *AI agents* trigger and conflict with each other. Offline multi-agent harness, budget circuit breakers, microsecond rollbacks, and HUD.
 
 ---
 
-## FastMCP Universal Tool Integration
+## License & Authors
 
-Swarmojo exposes all specialist engines and fleet capabilities over FastMCP. Connect any compatible client (Claude Code, Cursor, Windsurf, or custom harnesses):
-
-```json
-{
-  "mcpServers": {
-    "swarmmojo": {
-      "command": "python",
-      "args": ["d:/Buzburg Files/Github/Swarmojo/swarmmojo.py", "mcp"]
-    }
-  }
-}
-```
-
-### Core MCP Tools Available:
-- **`coding_review_code`**: Multi-perspective static security and performance code review.
-- **`coding_inspect_binary`**: Inspect binary magic headers, architecture, and entry points.
-- **`coding_repo_codemap`**: Extract hierarchical project-wide symbol codemaps.
-- **`meta_immunity_check`**: Query fleet herd immunity memory for instant failure remedies.
-- **`meta_dedup_run`**: Execute deduplicated shell commands with memory TTL caching.
-- **`meta_desktop_action`**: Dispatch high-speed desktop clicks, typing, and window focus.
-- **`meta_dispatch_quick_action`**: Dispatch omnipresent actions to specialist agents.
-- **`symnexus_query`**: Fast in-memory symbol lookup and bidirectional call-graph index (<20 µs).
-- **`titandelta_memory_update`**: Store facts in test-time neural associative memory.
-- **`phasegate_triage_tools`**: Prune candidate tool sets via 256-dim phase vector similarity (<50 µs).
-- **`workflow_run_dag`**: Run 8-stage constitutional DAG workflows with cryptographic verification.
-- **`assistant_get_briefing`**: Fetch daily executive priorities and system health briefings.
-- **`design_build_landing_page`**: Generate complete dark-mode landing pages with glassmorphism.
-- **`studio_compile_prompt`**: Compile cinematic directorial prompts with optics and lighting presets.
-- **`studio_export_diffusion_graph`**: Export production-ready diffusion execution graphs for Flux/SDXL.
-- **`writer_audit_prose`**: Run Ghost Protocol anti-slop audits and cadence analyses.
-
----
-
-## Quick Start & Verification
-
-### 1. Prerequisites
-- **Python**: 3.11 or later
-- **Mojo**: Modular Mojo SIMD compiler (v25+) for native kernels (automatic fallback included)
-
-### 2. Run the First-Run Diagnostic Demo
-```sh
-python -I -S -B scripts/demo_first_run.py
-```
-*Zero installation, zero GPU, and zero network required. Exercises real controlled recovery and log compaction.*
-
-### 3. Run the Comprehensive Test Suite
-```sh
-uv run --directory . --with pytest python -m pytest tests/test_swarmmojo.py tests/test_meta_harness.py tests/test_writer_agent.py tests/test_studio_agent.py tests/test_workflow_agent.py tests/test_meta_comparison.py tests/test_repo_enhancements.py tests/test_new_harness_upgrades.py tests/test_sovereign_engines_and_optimizations.py tests/test_aeon_harness.py tests/test_harness.py tests/test_integrations.py -v
-```
-**100% test pass rate across all core integration, performance, and unit test suites.**
-
----
-
-## Sovereign Architecture & Authorship
-
-- **Author**: Buzburg AI
-- **Contact & Inquiries**: `buzburgai@gmail.com`
-- **GitHub Repository**: [https://github.com/Buzburg/Swarmojo](https://github.com/Buzburg/Swarmojo)
-- **License**: [Apache-2.0](LICENSE) © 2026 Buzburg LLC.
+Licensed under the [Apache-2.0 License](LICENSE). Built with craft by **[Buzburg AI](mailto:buzburgai@gmail.com)**.

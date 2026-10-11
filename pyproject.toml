@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "Swarmojo"
+name = "swarm-tangle"
 version = "1.0.0"
-description = "The blazing-fast, local-first AI agent meta-harness. Run sovereign multi-agent super-swarms on your own silicon with sub-microsecond Mojo SIMD speed (<50µs), 30+ sovereign engines, fleet herd immunity, self-healing Git rollbacks, and zero cloud lock-in."
+description = "Govern how autonomous AI agents trigger and conflict with each other. Offline multi-agent harness, budget circuit breakers, microsecond rollbacks, and HUD."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
@@ -35,6 +35,8 @@ test = [
 ]
 
 [project.scripts]
+swarm-tangle = "swarmmojo:main"
+swarmtangle = "swarmmojo:main"
 swarmmojo = "swarmmojo:main"
 swarm-mojo = "aeon.cli:main"
 aeon = "aeon.cli:main"

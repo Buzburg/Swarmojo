@@ -1,7 +1,7 @@
 {
-  "name": "swarmmojo",
+  "name": "swarm-tangle",
   "version": "1.0.0",
-  "description": "The blazing-fast, local-first AI agent meta-harness. Run sovereign multi-agent super-swarms on your own silicon with sub-microsecond Mojo SIMD speed (<50µs) and zero cloud lock-in.",
+  "description": "Govern how autonomous AI agents trigger and conflict with each other. Offline multi-agent harness, budget circuit breakers, microsecond rollbacks, and HUD.",
   "scripts": {
     "polyharness": "node polyharness/bin/polyharness.js",
     "polyharness:build": "node polyharness/bin/polyharness.js build",
