@@ -34,6 +34,54 @@
 
 ---
 
+## 🐝 Swarmojo HUD — Sovereign Operations Console
+
+Styled in the official **Buzburg** brand palette (Honey Gold, Dark Hive Charcoal, and Crisp Ivory) and powered by sub-microsecond Mojo telemetry, the **Swarmojo HUD** provides an interactive **Paperclip-grade organizational control plane** to orchestrate, budget, and govern autonomous multi-agent teams on your own silicon.
+
+### ⚡ 1. Live Operations & Microsecond Telemetry
+*Real-time specialist telemetry, in-memory SymNexus symbol search (<20µs), StateEpoch OCC concurrency, and TriggerTangle offline rehearsal pipeline.*
+
+<p align="center">
+  <img src="assets/screenshots/swarmojo_hud_telemetry.png" alt="Swarmojo HUD Live Telemetry" width="100%">
+</p>
+
+### 🏢 2. Swarm Organizational Hierarchy (Org Chart)
+*Corporate-grade org chart treating agents as company employees with explicit reporting lines, model backends, tier tags (Executive, Lead, Specialist, Auditor), and live spend counters.*
+
+<p align="center">
+  <img src="assets/screenshots/swarmojo_hud_orgchart.png" alt="Swarm Org Chart" width="100%">
+</p>
+
+### 📋 3. Goals & Issues Kanban Board
+*Autonomous task delegation board with priority tagging, agent assignments, and automated dependency blockers (e.g. `TASK-106` blocked by `TASK-102`).*
+
+<p align="center">
+  <img src="assets/screenshots/swarmojo_hud_tasks.png" alt="Goals and Tasks Kanban Board" width="100%">
+</p>
+
+### 💰 4. Budgets & Spend Governance
+*Firm financial controls with organization hard caps, token consumption tracking, and automated circuit breakers to kill runaway recursive loops.*
+
+<p align="center">
+  <img src="assets/screenshots/swarmojo_hud_budgets.png" alt="Budgets and Spend Governance" width="100%">
+</p>
+
+### 🛡️ 5. Human-in-the-Loop Governance & Approvals
+*Zero-bypass authorization queue for high-stakes autonomous operations (git pushes to main, cloud GPU bursts) with one-click **✓ Approve** / **✗ Reject**.*
+
+<p align="center">
+  <img src="assets/screenshots/swarmojo_hud_governance.png" alt="Human-in-the-Loop Governance" width="100%">
+</p>
+
+### ⚙️ 6. Harness Scheduler & BYOA Connectors
+*Heartbeat frequency controls (30s, 60s, 5m, Manual), instant **💓 Pulse Heartbeat** triggering, and Bring-Your-Own-Agent adapters for Claude Code, OpenCode, Codex, Ollama, and native Mojo.*
+
+<p align="center">
+  <img src="assets/screenshots/swarmojo_hud_settings.png" alt="Harness Options and Connectors" width="100%">
+</p>
+
+---
+
 ## The Core Pillars of Swarmojo
 
 Swarmojo unifies five foundational pillars into a cohesive, zero-cloud architecture:
