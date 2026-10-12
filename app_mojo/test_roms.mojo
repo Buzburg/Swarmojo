@@ -126,7 +126,7 @@ def test_tsl_protocol() raises:
     var parser = TSLStreamParser()
     parser.feed('[OUT:"System online."][ADD:(Omarchy uses MSGL_FFI)]')
     if parser.output_stream == "System online." and len(parser.bound_triples) == 1:
-        var t = parser.bound_triples[0]
+        var t = parser.bound_triples[0].copy()
         if t.subject == "Omarchy" and t.relation == "uses" and t.object == "MSGL_FFI":
             print("  -> PASSED: TSL Streaming FSM parsed output & knowledge triple!")
             return
@@ -154,4 +154,3 @@ def main() raises:
         print("All nine Mojo checks passed.")
     finally:
         temp.cleanup()
-

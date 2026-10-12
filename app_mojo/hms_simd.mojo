@@ -8,8 +8,8 @@ Ported from Swarmojo/repo_stapler/hms_simd.mojo and adapted for ROMS Mojo runtim
 - Bipolar cosine similarity and Hopfield associative memory cleanup
 """
 
-alias D = 16384
-alias WORDS = 256  # 16384 // 64
+comptime D = 16384
+comptime WORDS = 256  # 16384 // 64
 
 
 struct Hypervector(Movable, Copyable):
@@ -21,13 +21,13 @@ struct Hypervector(Movable, Copyable):
         for _ in range(WORDS):
             self.words.append(0)
 
-    def __copyinit__(out self, other: Self):
+    def __init__(out self, *, copy: Self):
         self.words = List[UInt64](capacity=WORDS)
-        for i in range(len(other.words)):
-            self.words.append(other.words[i])
+        for i in range(len(copy.words)):
+            self.words.append(copy.words[i])
 
-    def __moveinit__(out self, mut other: Self):
-        self.words = other.words^
+    def __init__(out self, *, deinit move: Self):
+        self.words = move.words^
 
     def set_word(mut self, idx: Int, val: UInt64):
         if idx >= 0 and idx < WORDS:
@@ -114,22 +114,22 @@ struct HolographicMemoryBank(Movable, Copyable):
         self.vectors = List[Hypervector]()
         self.threshold = cleanup_threshold
 
-    def __copyinit__(out self, other: Self):
+    def __init__(out self, *, copy: Self):
         self.keys = List[String]()
         self.vectors = List[Hypervector]()
-        self.threshold = other.threshold
-        for i in range(len(other.keys)):
-            self.keys.append(other.keys[i])
-            self.vectors.append(other.vectors[i])
+        self.threshold = copy.threshold
+        for i in range(len(copy.keys)):
+            self.keys.append(copy.keys[i])
+            self.vectors.append(copy.vectors[i].copy())
 
-    def __moveinit__(out self, mut other: Self):
-        self.keys = other.keys^
-        self.vectors = other.vectors^
-        self.threshold = other.threshold
+    def __init__(out self, *, deinit move: Self):
+        self.keys = move.keys^
+        self.vectors = move.vectors^
+        self.threshold = move.threshold
 
     def insert_atom(mut self, key: String, vec: Hypervector):
         self.keys.append(key)
-        self.vectors.append(vec)
+        self.vectors.append(vec.copy())
 
     def find_nearest(self, probe: Hypervector) -> String:
         """Hopfield clean-up / associative lookup returning the nearest stored key."""

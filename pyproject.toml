@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "Swarmojo"
 version = "1.0.0"
-description = "The blazing-fast, local-first AI agent meta-harness. Sovereign multi-agent swarms on your own silicon with sub-microsecond Mojo SIMD speed (<50µs), Paperclip-grade org governance, and Swarmojo HUD."
+description = "Build with your own AI team. A local-first workspace for projects, specialist agents, ROMS memory, and human-reviewed actions. Your models, your control."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
@@ -39,6 +39,7 @@ test = [
 swarm-tangle = "swarmmojo:main"
 swarmtangle = "swarmmojo:main"
 swarmmojo = "swarmmojo:main"
+swarmojo-desktop = "app.desktop:main"
 swarm-mojo = "aeon.cli:main"
 aeon = "aeon.cli:main"
 polyharness = "app.polyharness:main"
@@ -59,5 +60,6 @@ aeon = [
     "vendor/triggertangle/PROVENANCE.json"
 ]
 app = [
-    "workbench/*"
+    "workbench/*",
+    "desktop_assets/*"
 ]

@@ -149,7 +149,10 @@ class ExecutionEnvironment:
         command += ['--proc', '/proc', '--dev', '/dev', '--tmpfs', '/tmp',
                     '--bind', str(self.root_path), '/workspace', '--chdir', '/workspace',
                     '--clearenv', '--setenv', 'PATH', '/usr/bin:/bin', '--setenv', 'HOME', '/tmp']
-        executable = shutil.which(argv[0]) if not Path(argv[0]).is_absolute() else argv[0]
+        # Bare Python commands use the active runtime already mounted above.
+        # A host PATH shim may resolve to an unrelated, unmounted installation.
+        executable = (sys.executable if argv[0] in {'python', 'python3'} else
+                      shutil.which(argv[0]) if not Path(argv[0]).is_absolute() else argv[0])
         if executable:
             argv = [str(Path(executable).resolve()), *argv[1:]]
         return [*command, '--', *argv]

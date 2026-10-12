@@ -1,7 +1,7 @@
 {
   "name": "swarmojo",
   "version": "1.0.0",
-  "description": "The blazing-fast, local-first AI agent meta-harness. Sovereign multi-agent swarms on your own silicon with sub-microsecond Mojo SIMD speed (<50µs), Paperclip-grade org governance, and Swarmojo HUD.",
+  "description": "Build with your own AI team. A local-first workspace for projects, specialist agents, ROMS memory, and human-reviewed actions. Your models, your control.",
   "scripts": {
     "polyharness": "node polyharness/bin/polyharness.js",
     "polyharness:build": "node polyharness/bin/polyharness.js build",

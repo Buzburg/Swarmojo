@@ -19,15 +19,15 @@ struct BinaryVector(Movable, Copyable):
         for _ in range(num_words):
             self.words.append(0)
 
-    def __copyinit__(out self, other: Self):
-        self.dim = other.dim
-        self.words = List[UInt64](capacity=len(other.words))
-        for i in range(len(other.words)):
-            self.words.append(other.words[i])
+    def __init__(out self, *, copy: Self):
+        self.dim = copy.dim
+        self.words = List[UInt64](capacity=len(copy.words))
+        for i in range(len(copy.words)):
+            self.words.append(copy.words[i])
 
-    def __moveinit__(out self, mut other: Self):
-        self.dim = other.dim
-        self.words = other.words^
+    def __init__(out self, *, deinit move: Self):
+        self.dim = move.dim
+        self.words = move.words^
 
     def set_bit(mut self, index: Int, val: Bool):
         if val:

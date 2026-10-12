@@ -1,216 +1,124 @@
-# Swarmojo ⚡
+# Swarmojo
 
-**Will your AI agents burn your budget while overwriting each other's code?**
+**Your ideas. Your agents. Your workspace.**
 
-Agent A refactors an authentication module. Agent B runs a failing test and reverts the file. Agent C attempts a patch, triggers a cyclic linter error, and spawns three subagents. Within four minutes, they have burned $45 in API credits, locked the git working tree, and produced zero working code.
+Turn an idea into a project, bring in the specialists you need, and build with an AI team you control. Swarmojo is a local-first agent workspace with a dedicated Main agent, project memory, ROMS knowledge, and reviewed file and command proposals—all in a warm gold-and-charcoal desktop.
 
-Swarmojo governs that interaction **before your agents break production**. Run sovereign, local-first multi-agent teams with strict organizational reporting, hard budget circuit-breakers, microsecond Git rollbacks, and Paperclip-grade human approval gates — directly on your own silicon.
+[![Checks](https://github.com/Buzburg/Swarmojo/actions/workflows/checks.yml/badge.svg)](https://github.com/Buzburg/Swarmojo/actions/workflows/checks.yml)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-gold)](pyproject.toml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue)](LICENSE)
 
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Runtime: Python + Mojo](https://img.shields.io/badge/Runtime-Python_3.11+_|_Mojo_SIMD_v25+-orange.svg)](app_mojo/)
-[![Governance: Paperclip--Grade](https://img.shields.io/badge/Governance-Paperclip--Grade-gold.svg)](docs/meta_agent_comparison.md)
-[![Privacy: 100% Offline](https://img.shields.io/badge/Privacy-100%25_Offline_|_Zero_Cloud-emerald.svg)](#no-account-no-cloud-zero-telemetry)
-[![Tests: Passing](https://img.shields.io/badge/Tests-100%25_Passing-brightgreen.svg)](tests/)
-[![Sister Project: TriggerTangle](https://img.shields.io/badge/Sister_Project-TriggerTangle-purple.svg)](https://github.com/Buzburg/trigger-tangle)
+[Explore the interface](https://buzburg.github.io/Swarmojo/) · [Desktop guide](docs/desktop-features.md) · [Agent runtime](docs/meta-runtime.md) · [Report an issue](https://github.com/Buzburg/Swarmojo/issues)
 
-![Swarmojo HUD — Sovereign Operations Console and Governance Flight Deck](docs/screenshot.png)
+![Swarmojo project workspace](docs/desktop-features.jpg)
 
----
+## Make room for your next idea
 
-## Try it in 5 seconds
+- **Start with a project.** Give it a brief, its own workspace, and a team assembled for that job. Your sidebar keeps projects within reach.
+- **Choose your specialists.** Add a Coder, Designer, Studio, Writer, Researcher, Reviewer, or another role. Rename them, give them project guidance, pause them, and choose per-agent model settings. Their specialist prompts, skills, tools, and memory policies stay intact.
+- **Think with your Main agent.** Use a separate everyday conversation for questions, planning, and ideas that don’t belong to one project.
+- **Keep useful context close.** Save project notes, search conversations and references, read public web pages, and select excerpts from your existing ROMS knowledge index.
+- **Stay in control of changes.** Inspect exact file contents and commands before approving them. Set action permissions, context exclusions, and project budgets. Review receipts and activity as work progresses.
+- **Pick up where you left off.** Projects and chats persist locally. Drafts and your last workspace view survive a browser refresh. After a server interruption, restore a request as a draft and decide when to send it again.
+- **Take your setup with you.** Export a reusable project template and import it into another Swarmojo workspace. Templates carry the brief, specialist configuration, and controls—not connection keys or conversation history.
 
-**[Open the Live Interactive HUD](https://buzburg.github.io/Swarmojo/)** (or run [docs/index.html](docs/index.html) locally) — no installation, account, or API key. The flight deck runs offline in your desktop Chromium or Firefox browser.
+## Get started
 
-Prefer the CLI?
-
-1. **Clone and test immediately**:
-   ```sh
-   git clone https://github.com/Buzburg/Swarmojo.git
-   cd Swarmojo
-   python scripts/demo_first_run.py
-   ```
-2. **Rehearse an agent task with automated dependency blockers**:
-   ```sh
-   python roms.py gov tasks
-   ```
-3. **Inspect the live corporate hierarchy and active spend**:
-   ```sh
-   python roms.py gov org
-   ```
-4. **Trigger a human-governed approval gate before dangerous actions**:
-   ```sh
-   python roms.py gov approvals
-   ```
-5. **Enforce hard budget caps and kill runaway recursive loops**:
-   ```sh
-   python roms.py gov budget
-   ```
-
-### No account, no cloud, zero telemetry.
-Swarmojo runs on your machine and can use entirely local models. If you configure a remote provider, prompts and selected context are sent to that provider. No specific model family or operating-system build is required.
-
-**This is an explicit deterministic governance harness, not an opaque cloud wrapper.** You declare agent roles, budget ceilings, and rollback invariants. Swarmojo enforces them with mathematical rigor.
-
-> [!NOTE]
-> ### Harness vs. HUD: The Architecture
-> - **Swarmojo (The Harness)**: The headless multi-agent engine running on your silicon. It manages agent lifecycles, runs AST call-graphs, enforces hard budget caps, and triggers microsecond git rollbacks.
-> - **Swarmojo HUD (The Flight Deck)**: The built-in visual operations console. It is a feature *of* Swarmojo that runs in your browser to visualize real-time telemetry, Paperclip-grade org charts, Kanban task tracking, and human-in-the-loop approvals.
-
----
-
-## What makes this useful?
-
-- **Hard budgets, not polite prompts.** When an agent hits its spend cap or token ceiling, the harness physically halts execution with an automated circuit breaker. It doesn't ask the LLM nicely to stop.
-- **Microsecond Git rollbacks (`GitGuard`).** `GitGuard` captures content-addressed delta snapshots before every file modification. If an agent fails a syntax check or breaks a unit test, your working tree auto-heals and reverts in under 5 milliseconds.
-- **Fleet herd immunity (`HerdImmunityRegistry`).** When any agent solves an environmental bug (e.g. POSIX `fcntl` on Windows, SQLite locks, API rate limits), it signs an immunity hash into fleet memory. Other agents never repeat the same failure.
-- **Explicit corporate reporting.** Agents operate under a defined organizational hierarchy (Executive &rarr; Lead &rarr; Specialist &rarr; Auditor). Subagents cannot hire other subagents without an assigned budget and explicit manager authorization.
-- **Zero-bypass human approval.** High-stakes operations — pushing to `main`, executing destructive commands (`rm -rf`, `DROP TABLE`), or leasing remote GPU clusters — block immediately in an interactive authorization queue.
-- **Sub-microsecond Mojo acceleration.** Core bottleneck operations (symbol call-graphs, token clamping, step hashing, PhaseGate vector routing) run through native Mojo SIMD kernels in `<50 µs`, not sluggish Python loops.
-
----
-
-## How It Works: Causal Governance Architecture
-
-```mermaid
-graph TD
-    User([User Prompt / High-Level Goal]) --> Exec[Executive Agent]
-    Exec --> Gov[Swarm Governance Engine]
-    Gov --> BudgetCheck{Budget & Cap OK?}
-    BudgetCheck -- Exceeded --> CircuitHalt[⚡ Automated Circuit Breaker Halt]
-    BudgetCheck -- Approved --> Lead[Lead Specialist Agent]
-    Lead --> DepCheck{Task Dependencies Clear?}
-    DepCheck -- Blocked --> BlockHalt[⏳ Suspended on Predecessor Task]
-    DepCheck -- Ready --> GitSnap[🛡️ GitGuard Micro-Snapshot <1ms]
-    GitSnap --> Action[Execute Tool Step / Code Edit]
-    Action --> Verify{Tests & Invariants Pass?}
-    Verify -- Failed --> Rollback[⏪ GitGuard Auto-Rollback <5ms]
-    Rollback --> Immunity[🧠 Herd Immunity Broadcasts Remedy]
-    Verify -- Passed --> ApprovalCheck{Requires Human Gate?}
-    ApprovalCheck -- Yes --> Queue[🔒 Human-in-the-Loop Queue]
-    ApprovalCheck -- No --> Merkle[📜 ProofGraph SHA-256 Commit]
-```
-
----
-
-## Swarmojo ⚡ HUD — Sovereign Operations Console
-
-Styled in the official **Buzburg** brand palette (Honey Gold `#E5A823`, Dark Hive Charcoal `#13110E`, and Crisp Ivory `#FAF8F5`), the **Swarmojo HUD** provides an interactive Paperclip-grade organizational control plane:
-
-| ⚡ 1. Live Operations & Microsecond Telemetry | 🏢 2. Swarm Organizational Hierarchy |
-| :---: | :---: |
-| [![Telemetry](assets/screenshots/swarmojo_hud_telemetry.png)](assets/screenshots/swarmojo_hud_telemetry.png) | [![Org Chart](assets/screenshots/swarmojo_hud_orgchart.png)](assets/screenshots/swarmojo_hud_orgchart.png) |
-| *Sub-microsecond Mojo SIMD kernels, SymNexus AST search (<20µs), and StateEpoch OCC leases.* | *Corporate org chart treating agents as company employees with explicit reporting lines & spend counters.* |
-
-| 📋 3. Goals & Issues Kanban | 💰 4. Budgets & Spend Governance |
-| :---: | :---: |
-| [![Tasks Kanban](assets/screenshots/swarmojo_hud_tasks.png)](assets/screenshots/swarmojo_hud_tasks.png) | [![Budgets](assets/screenshots/swarmojo_hud_budgets.png)](assets/screenshots/swarmojo_hud_budgets.png) |
-| *Autonomous task delegation with priority tags and automated dependency blockers (`TASK-106` blocked by `TASK-102`).* | *Hard spend caps, token consumption tracking, and automated circuit breakers to kill runaway loops.* |
-
-| 🛡️ 5. Human-in-the-Loop Governance | ⚙️ 6. Harness Scheduler & Connectors |
-| :---: | :---: |
-| [![Approvals](assets/screenshots/swarmojo_hud_governance.png)](assets/screenshots/swarmojo_hud_governance.png) | [![Settings](assets/screenshots/swarmojo_hud_settings.png)](assets/screenshots/swarmojo_hud_settings.png) |
-| *Zero-bypass authorization queue for git pushes to main and cloud GPU bursts with one-click approve/reject.* | *Pulse heartbeats, 30s/60s scheduler, and BYOA connectors for Claude Code, OpenCode, Codex, and Ollama.* |
-
----
-
-## Use it in an Agent or Build Workflow
-
-Swarmojo includes a rich CLI suite callable directly or via Model Context Protocol (FastMCP):
+You need **Python 3.11 or newer**. A virtual environment keeps Swarmojo’s dependencies separate from other projects.
 
 ```sh
-# 1. Organization & Hierarchy: View agent seats, managers, and spend
-python roms.py gov org
-
-# 2. Budgets & Token Caps: View financial guardrails and circuit breaker limits
-python roms.py gov budget
-
-# 3. Tasks & Blockers: Inspect active agent assignments and dependency graphs
-python roms.py gov tasks
-
-# 4. Human-in-the-Loop Approvals: Authorize or reject pending high-risk actions
-python roms.py gov approvals
-
-# 5. Heartbeat Engine: Pulse active agents and advance pending work
-python roms.py gov heartbeat
+git clone https://github.com/Buzburg/Swarmojo.git
+cd Swarmojo
+python -m venv .venv
 ```
 
-### FastMCP Tool Integration
+Activate it on Linux or macOS:
 
-Every engine and governance function is exposed as a standardized FastMCP tool for your agent:
-
-```python
-from app.engine_tools import gov_org_chart, gov_budgets, gov_tasks, gov_request_approval
-
-# Check organizational hierarchy before delegating
-org_info = gov_org_chart()
-
-# Queue a high-risk operation for human sign-off
-approval = gov_request_approval(
-    agent_id="agent-coding-lead",
-    action="git_push",
-    details="Pushing commit dd456f3 to origin/main",
-    urgency="high"
-)
+```sh
+source .venv/bin/activate
 ```
 
----
+Or in Windows PowerShell:
 
-## The Six Specialist Agent Guilds
+```powershell
+.venv\Scripts\Activate.ps1
+```
 
-1. **Supercharged Coding Agent (`PiCodingToolkit`)**: Multi-perspective AST review, ELF/PE/Mach-O binary header parsing, hierarchical symbol codemaps, sub-millisecond workspace regex grep, and exact substring editing with pre-mutation rewind snapshots.
-2. **High-Craft Design Agent (`DesignAgentEngine`)**: Visual canvas composition, optical liquid glassmorphism tokens, backdrop blur CSS, and WCAG AAA contrast enforcement ($\ge 7:1$).
-3. **Multimodal Studio Agent (`StudioAgentEngine`)**: Directorial scene planning, multi-track timeline layout with `-14 LUFS` broadcast loudness normalization, visual quality scoring, and Flux/SDXL diffusion graph generation.
-4. **Authentic Prose Writer Agent (`WriterAgentEngine`)**: Ghost Protocol anti-slop engine stripping 200+ statistical AI clichés (`delve into`, `rich tapestry`, `testament to`), sentence cadence variance auditing, and multi-chapter book DAG planning.
-5. **Constitutional Workflow Agent (`WorkflowPipeline`)**: 8-stage constitutional DAG pipelines, automatic risk classification, destructive command blocking, and cryptographic SHA-256 Merkle proofs.
-6. **Sovereign Personal Assistant Agent (`PersonalAssistantEngine`)**: Persistent local desk context, SHA-256 encrypted personal credentials vault, specialist consult gateway, and 16kHz PCM real-time voice bridge with barge-in interruption.
+Then install and launch:
 
----
+```sh
+python -m pip install .
+python swarmmojo.py desktop
+```
 
-## Sovereign Engines Directory
+Open **http://127.0.0.1:8765**. The installed `swarmojo-desktop` command launches the same workspace.
 
-| Engine | Primary Capability & Performance Metric | CLI Command | FastMCP Tool |
-| :--- | :--- | :--- | :--- |
-| **Governance** | Paperclip-grade org chart, budgets, tasks Kanban & approvals | `python roms.py gov org` | `gov_org_chart` |
-| **SymNexus** | In-memory bidirectional symbol call-graph index (<20 µs) | `python roms.py symnexus` | `symnexus_query` |
-| **TitanDelta** | Test-Time Neural Associative Memory with surprise gating | `python roms.py titandelta` | `titandelta_memory_update` |
-| **GitGuard** | Sub-millisecond git micro-checkpoints with auto-rollback | `python roms.py git-guard` | `rewind_snapshot_workspace` |
-| **HerdImmunity** | Swarm herd immunity memory broadcasting instant bug remedies | `python roms.py meta immunity` | `meta_immunity_check` |
-| **DedupCache** | Durable command receipts with scoped, approval-gated retries | `python roms.py meta dedup` | `meta_dedup_run` |
-| **PhaseGate** | 256-dim phase vector System-1 tool triage router (<50 µs) | `python roms.py phasegate` | `phasegate_triage_tools` |
-| **Mojo-Drift** | 256-dim angular trajectory tracking (warn $\ge 65^\circ$, block $\ge 80^\circ$) | `python roms.py drift` | `drift_evaluate_action` |
-| **Sieve** | Streaming compiler & terminal log compaction (95%+ noise reduction) | `python roms.py sieve` | `sieve_compact_logs` |
-| **StateEpoch** | Optimistic concurrency control (OCC), version leases & CAS commits | `python roms.py state-epoch` | `state_epoch_check` |
-| **ProofGraph** | Step SHA-256 Merkle fingerprinting & cryptographic transition caching | `python roms.py proofgraph` | `proofgraph_verify_step` |
-| **DeltaRewind** | Content-addressed workspace snapshotting & microsecond delta rollback | `python roms.py rewind` | `delta_rewind_rollback` |
-| **TaskHorizon** | State-machine task DAG graph & anti-loop circuit breaker | `python roms.py horizon` | `task_horizon_record` |
-| **ToolMender** | JSON auto-repair, balance extraction & schema coercion | `python roms.py toolmender` | `toolmender_repair_output` |
+1. Open **Settings** in the top bar and enter your model ID and OpenAI-compatible endpoint. Local HTTP endpoints and remote HTTPS endpoints are supported. No model is preselected.
+2. Create a project from the left sidebar. Add a brief and the specialists you want to use.
+3. Send a message to the Main agent, or select **Use team** to collect specialist responses and a coordinated answer.
+4. When changes are proposed, open **Approvals**, review the exact action, and choose whether to apply it.
 
----
+**Try the interface first:** the [live preview](https://buzburg.github.io/Swarmojo/) needs no installation. It shows the design; saving projects, connecting models, and running agents require your local server.
 
-## Model-agnostic agent runtime
+## A workspace that remembers
 
-Coding, research, review, and coordination agents use operator-selected model profiles.
-Use an OpenAI-compatible local or remote endpoint, or register a provider adapter for
-another protocol. Premade agents use `default`; mock output requires explicit selection.
+| Section | What you can do |
+| --- | --- |
+| Conversation | Talk with the project coordinator or request a team response |
+| Tasks | Assign owners, set priorities and dependencies, and track your assessment of progress |
+| Memory | Curate notes, search project history, and explicitly select ROMS knowledge excerpts |
+| Web | Read public HTML or text pages and choose saved references for model context |
+| Files | See files in the project workspace |
+| Approvals | Review proposed writes and commands, then inspect their receipts |
+| Activity | Review runs, changes to settings, and conservative usage accounting |
+| Controls | Set allowed actions, shared context, ignored paths, and a lifetime project budget |
 
-The meta runtime includes persistent approvals and budgets, workspace-confined commands,
-killable worker processes, receipt-backed memory scoped to each agent/run, and durable
-request replay. Read the [runtime setup and approval guide](docs/meta-runtime.md) for
-configuration, executable examples, and platform limits.
+Use **Ctrl+K / Cmd+K** for quick navigation and **Ctrl+, / Cmd+,** for Settings. Templates are available in project Memory and Workspace settings.
 
-## The Buzburg Tangle Suite
+ROMS remains part of Swarmojo, including its retrieval, memory, and context components. The desktop searches an existing local ROMS index on request. Selected excerpts become project reference snapshots; they do not grant permission to execute actions.
 
-Swarmojo is part of the **Buzburg Tangle Ecosystem** of sovereign, local-first developer tools:
+## Your models, your choices
 
-- 🪢 **[TriggerTangle](https://github.com/Buzburg/trigger-tangle)**: Rehearse how separate *automations* trigger each other. Offline design simulator, causal loop witnesses, and CLI.
-- 🐝 **[Swarmojo](https://github.com/Buzburg/Swarmojo)**: Govern how separate *AI agents* trigger and conflict with each other. Offline multi-agent harness, budget circuit breakers, microsecond rollbacks, and HUD.
+Swarmojo can use a local model or your chosen remote provider. The desktop starts disconnected. API keys entered in Settings stay in server-process memory and need to be supplied again after a restart. You can also set `SWARMOJO_MODEL_API_KEY` in the server’s environment.
 
----
+Project data is stored on your machine, by default under `~/.local/state/swarmojo/desktop/`. Use `swarmojo-desktop --state-dir PATH --port 8765` for a different state directory. When you choose a remote provider, your messages and selected context are sent to that provider. Reading a public page contacts that site.
 
-## License & Authors
+The public-page reader retrieves text without scripts, cookies, or login sessions. It accepts public HTTP(S) addresses on ports 80/443, limits page size, and rejects private network destinations. It is designed for reference reading, not interactive web automation.
 
-Licensed under the [Apache-2.0 License](LICENSE). Built with craft by **[Buzburg AI](mailto:buzburgai@gmail.com)**.
+## Practical boundaries
 
-See the [Meta-Agent Architecture Comparison: Swarmojo vs Conventional Frameworks](docs/meta_agent_comparison.md) for the component comparison.
+- **Approval is explicit.** Generating a response does not execute a file write or command. Existing approvals are checked against current project permissions and the reviewed target state.
+- **Commands need a sandbox.** Desktop command execution requires Linux with `bubblewrap` available. On other platforms, use discussion and file proposals; command execution fails closed when its sandbox is unavailable.
+- **Budgets use configured bounds.** Monetary accounting uses the maximum cost per model call that you enter, rather than a provider invoice. Set a realistic bound for paid models. Existing per-agent limits also apply.
+- **Task cards are planning records.** Moving a task does not run an agent or prove a result is correct. A team run gathers specialist replies and then a coordinator response.
+- **Recovery does not replay work.** Saved replies and approvals remain available after interruption. Requests are restored only as editable drafts.
+- **Mojo is optional for the desktop.** Native kernels and other advanced CLI features have their own runtime requirements. No native speed benchmark is implied by the desktop experience.
 
-PolyHarness is an optional, separately obtained integration. If you have access, place its checkout in `polyharness/` or set `SWARMOJO_POLYHARNESS_ROOT` to its directory. It is not included in the public repository or Python distribution.
+See the [desktop guide](docs/desktop-features.md) for context limits, portable template contents, and recovery behavior.
+
+## Build on the harness
+
+Swarmojo also ships Python, CLI, and MCP interfaces for agent workflows. The desktop uses the existing specialist runtime, governance ledger, and approval store.
+
+```sh
+python swarmmojo.py --help
+python swarmmojo.py gov org
+python scripts/demo_first_run.py
+```
+
+The last command runs a no-install fixture demonstration. It does not call a live model. For integration contracts and examples, read the [harness interface](docs/HARNESS.md), [runtime guide](docs/meta-runtime.md), and [architecture overview](docs/meta_agent_comparison.md).
+
+To run the portable desktop checks from a source checkout:
+
+```sh
+python -m pip install -r requirements-ci.txt
+python -m pytest tests/test_desktop.py tests/test_desktop_release.py -q
+```
+
+After editing `app/desktop_assets/`, run `python scripts/sync_desktop_preview.py` to refresh the GitHub Pages preview. CI checks the desktop alongside the portable harness on Linux and Windows with Python 3.11 and 3.12.
+
+## Contribute
+
+Have an idea for a better agent workflow? Open an issue with the result you want to achieve. For a bug, include your operating system, Python version, reproduction steps, and redacted logs. Keep credentials and private project content out of reports.
+
+Built by **[Buzburg AI](mailto:buzburgai@gmail.com)**. Licensed under [Apache-2.0](LICENSE); see [NOTICE](NOTICE) for retained third-party notices.

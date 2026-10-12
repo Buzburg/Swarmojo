@@ -6,10 +6,10 @@ Ported from Swarmojo/repo_stapler/tsl_protocol.mojo:
 - Compact TSL prompt builder reducing token overhead by 80-90% for small local models
 """
 
-alias STATE_SEEKING = 0
-alias STATE_TAG_IDENT = 1
-alias STATE_STREAM_OUT = 2
-alias STATE_BUFFER_ADD = 3
+comptime STATE_SEEKING = 0
+comptime STATE_TAG_IDENT = 1
+comptime STATE_STREAM_OUT = 2
+comptime STATE_BUFFER_ADD = 3
 
 
 struct ParsedTriple(Movable, Copyable):
@@ -22,15 +22,15 @@ struct ParsedTriple(Movable, Copyable):
         self.relation = r
         self.object = o
 
-    def __copyinit__(out self, other: Self):
-        self.subject = other.subject
-        self.relation = other.relation
-        self.object = other.object
+    def __init__(out self, *, copy: Self):
+        self.subject = copy.subject
+        self.relation = copy.relation
+        self.object = copy.object
 
-    def __moveinit__(out self, mut other: Self):
-        self.subject = other.subject^
-        self.relation = other.relation^
-        self.object = other.object^
+    def __init__(out self, *, deinit move: Self):
+        self.subject = move.subject^
+        self.relation = move.relation^
+        self.object = move.object^
 
 
 struct TSLStreamParser(Movable, Copyable):
@@ -50,25 +50,25 @@ struct TSLStreamParser(Movable, Copyable):
         self.in_quotes = False
         self.bound_triples = List[ParsedTriple]()
 
-    def __copyinit__(out self, other: Self):
-        self.state = other.state
-        self.tag_buffer = other.tag_buffer
-        self.triple_buffer = other.triple_buffer
-        self.output_stream = other.output_stream
-        self.in_quotes = other.in_quotes
+    def __init__(out self, *, copy: Self):
+        self.state = copy.state
+        self.tag_buffer = copy.tag_buffer
+        self.triple_buffer = copy.triple_buffer
+        self.output_stream = copy.output_stream
+        self.in_quotes = copy.in_quotes
         self.bound_triples = List[ParsedTriple]()
-        for i in range(len(other.bound_triples)):
-            self.bound_triples.append(other.bound_triples[i])
+        for i in range(len(copy.bound_triples)):
+            self.bound_triples.append(copy.bound_triples[i].copy())
 
-    def __moveinit__(out self, mut other: Self):
-        self.state = other.state
-        self.tag_buffer = other.tag_buffer^
-        self.triple_buffer = other.triple_buffer^
-        self.output_stream = other.output_stream^
-        self.in_quotes = other.in_quotes
-        self.bound_triples = other.bound_triples^
+    def __init__(out self, *, deinit move: Self):
+        self.state = move.state
+        self.tag_buffer = move.tag_buffer^
+        self.triple_buffer = move.triple_buffer^
+        self.output_stream = move.output_stream^
+        self.in_quotes = move.in_quotes
+        self.bound_triples = move.bound_triples^
 
-    def feed(mut self, chunk: String):
+    def feed(mut self, chunk: String) raises:
         """Processes incoming token delta slice character-by-character."""
         for ch_slice in chunk.codepoint_slices():
             var ch = String(ch_slice)
@@ -105,7 +105,7 @@ struct TSLStreamParser(Movable, Copyable):
                     self.triple_buffer = String("")
                 elif ch == ")":
                     var raw = String(self.triple_buffer.strip())
-                    if len(raw) > 0:
+                    if raw.byte_length() > 0:
                         self._commit_triple(raw)
                     self.triple_buffer = String("")
                 elif ch == "]":
@@ -132,7 +132,7 @@ def build_tsl_prompt(
     """Assembles a compressed Telegraphic Symbolic Language payload."""
     var sb = String("[ROLE:") + role + "]\n"
 
-    if len(repo_ast_context) > 0:
+    if repo_ast_context.byte_length() > 0:
         sb += "[REPO_AST:\n" + repo_ast_context + "]\n"
 
     if len(mem_triples) > 0:

@@ -202,7 +202,9 @@ class TitansMemoryManager:
         y_vec = matvec(weights, q_vec)
 
         best_match = None
-        best_sim = -1.0
+        # Select a stored candidate even at the negative cosine boundary.
+        # Floating-point rounding can produce a value slightly below -1.
+        best_sim = float("-inf")
         for item in meta.get("stored_items", []):
             cand_vec = encode_unit_vector(item["value"])
             sim = cosine_similarity(y_vec, cand_vec)

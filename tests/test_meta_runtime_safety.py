@@ -385,3 +385,13 @@ def test_approval_expiry_and_provider_failure_preserve_conservative_accounting(r
     with pytest.raises(ModelError): worker.execute_turn('code')
     assert worker.governance.get_budget_summary()['total_spend_usd'] == .25
     assert worker.store.facts(worker.scope) == []
+
+
+def test_titans_recall_keeps_persisted_candidate_at_negative_cosine_boundary(tmp_path):
+    from app.engines.titans import TitansMemory
+    memory = TitansMemory(root=str(tmp_path))
+    memory.init()
+    memory.write('actual bytes', key='2')
+    restored = TitansMemory(root=str(tmp_path))
+    assert restored.read('actual bytes') == [{'key':'2', 'value':'actual bytes'}]
+    assert restored.recall('actual bytes')['confidence'] == 0

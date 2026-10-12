@@ -8,7 +8,7 @@ Optimized for local LLM prompt contexts:
 """
 
 from std.python import Python, PythonObject
-from app_mojo.config import get_embedding_model, ROMSConfig
+from app_mojo.config import ROMSConfig
 from app_mojo.db import get_connection
 
 def _get_result_cache() raises -> PythonObject:
@@ -52,10 +52,13 @@ def search_knowledge_base(query: String, limit: Int = 3, custom_db_path: PythonO
     if cached is not None:
         query_bytes = cached[0]
     else:
-        var model = get_embedding_model()
-        query_bytes = model.encode(
-            py_q, output_value="sentence_embedding"
-        ).astype("float32").tobytes()
+        # Match the configured encoder used by Python ingestion, including the
+        # deterministic offline fallback when optional ML packages are absent.
+        var config = Python.import_module("app.config")
+        var numpy = Python.import_module("numpy")
+        query_bytes = numpy.asarray(
+            config.compute_embedding_vector(String(py_q)), dtype="float32"
+        ).tobytes()
 
         var store_params = Python.evaluate("[]")
         store_params.append(q_hash)

@@ -12,7 +12,10 @@ from app.prefrontal_cortex import main as prefrontal_main
 
 
 def run_entry():
-    if len(sys.argv) > 1 and sys.argv[1] == "harness":
+    if len(sys.argv) > 1 and sys.argv[1] == "desktop":
+        from app.desktop import main
+        raise SystemExit(main(sys.argv[2:]))
+    elif len(sys.argv) > 1 and sys.argv[1] == "harness":
         from app.harness_cli import main
         raise SystemExit(main(sys.argv[2:]))
     elif len(sys.argv) > 1 and sys.argv[1] == "correction":

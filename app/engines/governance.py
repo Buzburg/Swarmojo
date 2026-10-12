@@ -466,6 +466,30 @@ class HarnessGovernanceEngine:
         return {"status": "created", "task": issue.to_dict()}
 
     @durable(write=True)
+    def update_task_details(self, task_id, title, description, assignee_id, priority, blocked_by):
+        """Edit a task without bypassing dependency or status-transition checks."""
+        if task_id not in self._tasks or assignee_id not in self._employees:
+            raise ValueError('Unknown task or assignee')
+        if any(id not in self._tasks for id in blocked_by):
+            raise ValueError('Dependencies must name existing tasks')
+        pending, visited = list(blocked_by), set()
+        while pending:
+            id = pending.pop()
+            if id == task_id:
+                raise ValueError('Task dependencies cannot form a cycle')
+            if id not in visited:
+                visited.add(id)
+                pending.extend(self._tasks[id].blocked_by)
+        task = self._tasks[task_id]
+        if task.status in {'in_progress', 'review', 'done'} and any(
+                self._tasks[id].status != 'done' for id in blocked_by):
+            raise ValueError('Active tasks cannot gain unfinished dependencies; block the task first')
+        task.title, task.description, task.assignee_id = title, description, assignee_id
+        task.priority, task.blocked_by = priority, list(dict.fromkeys(blocked_by))
+        task.updated_at = time.time()
+        return {'status': 'updated', 'task': task.to_dict()}
+
+    @durable(write=True)
     def update_task_status(self, task_id: str, new_status: str) -> Dict[str, Any]:
         """Moves a task across Kanban columns."""
         if task_id not in self._tasks:

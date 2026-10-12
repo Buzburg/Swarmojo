@@ -1,7 +1,7 @@
 {
   "name": "Swarmojo",
   "version": "1.0.0",
-  "description": "The blazing-fast, local-first AI agent meta-harness. Sovereign multi-agent swarms on your own silicon with sub-microsecond Mojo SIMD speed (<50µs), Paperclip-grade org governance, and Swarmojo HUD.",
+  "description": "Build with your own AI team. A local-first workspace for projects, specialist agents, ROMS memory, and human-reviewed actions. Your models, your control.",
   "stack": {
     "primary": "python",
     "secondary": "mojo",
@@ -71,7 +71,7 @@
       "description": "Guidelines for Aeon specialist reviews and workflow rehearsal",
       "globs": ["aeon/**/*.py", "swarm_mojo/**/*.py"],
       "guidelines": [
-        "Ensure workflow rehearsals via TriggerTangle remain offline and advisory",
+        "Ensure workflow rehearsals remain offline and advisory",
         "Maintain explicit user approvals before mutating workspace state",
         "Keep SGLang and mSGL inference adapters optional and decoupled"
       ]
@@ -87,7 +87,7 @@
     },
     {
       "name": "meta-harness",
-      "description": "Guidelines for Swarmojo MetaHarness and Coding Agent (Pi Tools + Prime Recursion)",
+      "description": "Guidelines for Swarmojo MetaHarness and Coding Agent (exact editing and recursive delegation)",
       "globs": ["app/meta/**/*.py"],
       "guidelines": [
         "Support heterogeneous local and remote models (Ollama, LM Studio, vLLM, SGLang, mock)",
