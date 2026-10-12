@@ -21,7 +21,7 @@ from test_broker_concurrency import payload, response
 
 def executable(tmp_path, source):
     path = tmp_path / 'controlled worker'
-    path.write_text('#!' + sys.executable + '\n' + source)
+    path.write_text('#!' + str(Path(sys.executable).resolve()) + '\n' + source)
     path.chmod(0o700)
     return path
 

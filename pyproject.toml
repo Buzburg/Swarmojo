@@ -43,6 +43,7 @@ aeon = "aeon.cli:main"
 polyharness = "app.polyharness:main"
 
 [tool.setuptools]
+py-modules = ["swarmmojo", "roms", "cortex"]
 license-files = ["LICENSE", "NOTICE"]
 
 [tool.setuptools.packages.find]

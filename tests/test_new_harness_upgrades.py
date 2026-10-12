@@ -188,7 +188,7 @@ def test_antibody_herd_immunity_registry():
 def test_once_execution_cache():
     cache = OnceExecutionCache(default_ttl_seconds=5.0)
     # Run simple echo
-    cmd = f'{sys.executable} -c "print(12345)"'
+    cmd = f'"{sys.executable}" -c "print(12345)"'
     res1 = cache.get_or_run(cmd)
     assert res1["from_cache"] is False
     assert "12345" in res1["stdout"]

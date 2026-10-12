@@ -25,7 +25,7 @@ Prefer the CLI?
 
 1. **Clone and test immediately**:
    ```sh
-   git clone https://github.com/Buzburg/Swarmojo.git
+   git clone --recurse-submodules https://github.com/Buzburg/Swarmojo.git
    cd Swarmojo
    python scripts/demo_first_run.py
    ```
@@ -199,3 +199,5 @@ Swarmojo is part of the **Buzburg Tangle Ecosystem** of sovereign, local-first d
 ## License & Authors
 
 Licensed under the [Apache-2.0 License](LICENSE). Built with craft by **[Buzburg AI](mailto:buzburgai@gmail.com)**.
+
+See the [Meta-Agent Architecture Comparison: Swarmojo vs Conventional Frameworks](docs/meta_agent_comparison.md) for the component comparison.

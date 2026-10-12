@@ -141,7 +141,7 @@ def test_sovereign_desktop_bridge_and_batching():
 
 def test_sovereign_dedup_cache():
     cache = DeduplicatedExecutionCache(default_ttl_seconds=10.0)
-    cmd = f'{sys.executable} -c "print(998877)"'
+    cmd = f'"{sys.executable}" -c "print(998877)"'
     res1 = cache.get_or_run(cmd)
     assert res1["from_cache"] is False
     assert "998877" in res1["stdout"]

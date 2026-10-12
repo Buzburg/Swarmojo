@@ -76,13 +76,21 @@ def patch_path(value: str) -> str:
 
 def read_file(root: Path, relative: str) -> bytes | None:
     """No-follow descriptor walk; None represents an absent leaf, never a symlink."""
-    if os.name == 'nt' or os.O_RDONLY not in getattr(os, 'supports_dir_fd', set()):
-        target = (root / relative).resolve()
+    parts = PurePosixPath(relative).parts
+    if not parts or PurePosixPath(relative).is_absolute() or '..' in parts or '\\' in relative:
+        raise ValueError('File path must stay inside its root')
+    if os.name == 'nt' or os.open not in getattr(os, 'supports_dir_fd', set()):
+        target = root / relative
         try:
             root_resolved = root.resolve()
-            if not str(target).startswith(str(root_resolved)):
-                return None
-            if not target.is_file() or target.is_symlink():
+            for component in (target, *target.parents):
+                info = component.lstat()
+                if (stat.S_ISLNK(info.st_mode) or getattr(info, 'st_file_attributes', 0)
+                        & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0x400)):
+                    raise ValueError('Patch input must not traverse links or reparse points')
+            if not target.resolve().is_relative_to(root_resolved):
+                raise ValueError('Patch input escapes its root')
+            if not target.is_file():
                 return None
             if target.stat().st_size > MAX_FILE:
                 raise ValueError('Patch input must be a regular file up to 1 MiB')

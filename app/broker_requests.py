@@ -25,7 +25,7 @@ MAX_RECORD_BYTES = 2 * protocol.MAX_FRAME + 4096
 def owned(info: os.stat_result, *, directory: bool = False, private: bool = True) -> None:
     expected = stat.S_ISDIR if directory else stat.S_ISREG
     uid = getattr(os, 'getuid', None)
-    if (not expected(info.st_mode) or (uid is not None and info.st_uid != uid)
+    if (not expected(info.st_mode) or (uid is not None and info.st_uid != uid())
             or (os.name != 'nt' and (info.st_mode & (0o077 if private else 0o022)))
             or (not directory and os.name != 'nt' and info.st_nlink != 1)):
         raise ValueError('Unsafe request journal ownership or permissions')
@@ -33,7 +33,7 @@ def owned(info: os.stat_result, *, directory: bool = False, private: bool = True
 
 @contextmanager
 def journal() -> Iterator[Path]:
-    if os.name == 'nt' or os.O_RDONLY not in getattr(os, 'supports_dir_fd', set()):
+    if os.name == 'nt' or os.open not in getattr(os, 'supports_dir_fd', set()):
         STORE.mkdir(parents=True, exist_ok=True)
         yield STORE
         return
