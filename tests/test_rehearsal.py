@@ -218,6 +218,19 @@ class FileBoundaryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             r.read_input(self.file)
 
+    @unittest.skipUnless(os.name == 'nt', 'Windows short path aliases')
+    def test_windows_short_alias_identifies_the_same_file(self):
+        import ctypes
+        from ctypes import wintypes
+
+        get_short = ctypes.WinDLL('kernel32', use_last_error=True).GetShortPathNameW
+        get_short.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+        get_short.restype = wintypes.DWORD
+        buffer = ctypes.create_unicode_buffer(32768)
+        length = get_short(str(self.file.resolve()), buffer, len(buffer))
+        self.assertTrue(0 < length < len(buffer))
+        self.assertEqual(r.read_input(Path(buffer.value)), b'{}')
+
     def test_symlink_components_are_rejected(self):
         link = self.root/'link.json'
         try:

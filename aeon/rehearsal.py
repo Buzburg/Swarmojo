@@ -58,6 +58,10 @@ def _windows_read(path: Path, limit: int) -> bytes:
     import msvcrt
     from ctypes import wintypes
     _no_windows_links(path)
+    # Expand ordinary 8.3 aliases before comparing with the opened handle.
+    # Reparse points remain forbidden before and after canonicalization.
+    expected = path.resolve(strict=True)
+    _no_windows_links(expected)
     kernel = ctypes.WinDLL('kernel32', use_last_error=True)
     create = kernel.CreateFileW
     create.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, wintypes.LPVOID,
@@ -83,7 +87,7 @@ def _windows_read(path: Path, limit: int) -> bytes:
             actual = '\\\\' + actual[8:]
         elif actual.startswith('\\\\?\\'):
             actual = actual[4:]
-        if os.path.normcase(actual) != os.path.normcase(str(path)):
+        if os.path.normcase(actual) != os.path.normcase(str(expected)):
             raise ValueError('Rehearsal input resolved through a changed path')
         _no_windows_links(path)
         descriptor = msvcrt.open_osfhandle(handle, os.O_RDONLY | os.O_BINARY)
