@@ -25,7 +25,7 @@ Prefer the CLI?
 
 1. **Clone and test immediately**:
    ```sh
-   git clone --recurse-submodules https://github.com/Buzburg/Swarmojo.git
+   git clone https://github.com/Buzburg/Swarmojo.git
    cd Swarmojo
    python scripts/demo_first_run.py
    ```
@@ -201,3 +201,5 @@ Swarmojo is part of the **Buzburg Tangle Ecosystem** of sovereign, local-first d
 Licensed under the [Apache-2.0 License](LICENSE). Built with craft by **[Buzburg AI](mailto:buzburgai@gmail.com)**.
 
 See the [Meta-Agent Architecture Comparison: Swarmojo vs Conventional Frameworks](docs/meta_agent_comparison.md) for the component comparison.
+
+PolyHarness is an optional, separately obtained integration. If you have access, place its checkout in `polyharness/` or set `SWARMOJO_POLYHARNESS_ROOT` to its directory. It is not included in the public repository or Python distribution.

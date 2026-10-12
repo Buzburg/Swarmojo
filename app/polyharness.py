@@ -12,7 +12,9 @@ import subprocess
 import sys
 
 
-POLYHARNESS_ROOT = Path(__file__).resolve().parent.parent / "polyharness"
+POLYHARNESS_ROOT = Path(os.environ.get(
+    "SWARMOJO_POLYHARNESS_ROOT", Path(__file__).resolve().parent.parent / "polyharness"
+)).expanduser().resolve()
 POLYHARNESS_BIN = POLYHARNESS_ROOT / "bin" / "polyharness.js"
 
 
@@ -22,7 +24,10 @@ def run_polyharness(argv: list[str] | None = None) -> int:
         argv = sys.argv[1:]
 
     if not POLYHARNESS_BIN.is_file():
-        sys.stderr.write(f"Error: PolyHarness executable not found at {POLYHARNESS_BIN}\n")
+        sys.stderr.write(
+            f"Error: optional PolyHarness executable not found at {POLYHARNESS_BIN}. "
+            "Set SWARMOJO_POLYHARNESS_ROOT to a separate PolyHarness checkout.\n"
+        )
         return 1
 
     cmd = ["node", str(POLYHARNESS_BIN), *argv]

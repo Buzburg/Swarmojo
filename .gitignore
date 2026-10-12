@@ -69,3 +69,6 @@ build/
 .cortex/
 roms_dashboard.html
 
+
+# Optional private PolyHarness checkout; never publish it as a public dependency.
+/polyharness/
