@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 try:
     from fastmcp import FastMCP
@@ -14,6 +15,19 @@ from app.meta.builder import AgentBuilder, EnvironmentBuilder
 
 def register_meta_tools(server: FastMCP) -> None:
     harness = MetaHarness()
+    from app.meta.environment import ExecutionEnvironment
+    from app.meta.manifest import EnvironmentConfig
+    execution = ExecutionEnvironment(EnvironmentConfig(id="mcp", name="MCP workspace"), scope="mcp")
+    from app.meta.dedup_cache import DeduplicatedExecutionCache
+    command_cache = DeduplicatedExecutionCache(workspace_root=execution.root_path)
+
+    @server.tool()
+    def meta_execute_approved(request_id: str) -> str:
+        """Retry a reviewed request after the operator approves it using the local control CLI."""
+        record = execution.store.inspect(request_id)
+        value = execution.submit(record['action']['action'], request_id=request_id,
+                                 timeout=record['action']['timeout'])
+        return json.dumps(value, indent=2)
 
     @server.tool()
     def meta_list_agents() -> str:
@@ -53,7 +67,7 @@ def register_meta_tools(server: FastMCP) -> None:
         name: str,
         role: str,
         division: str = "engineering",
-        model_profile: str = "mock",
+        model_profile: str = "default",
         tools_csv: str = "",
         prompt: str = "",
     ) -> str:
@@ -70,11 +84,13 @@ def register_meta_tools(server: FastMCP) -> None:
         )
         manifest = builder.build()
         harness.register_agent(manifest)
-        saved_path = builder.save()
+        # MCP registrations are session-local; exporting definitions is an operator action.
+        saved_path = None
         return json.dumps({
             "status": "created",
             "agent": manifest.to_dict(),
-            "saved_path": str(saved_path),
+            "saved_path": saved_path,
+            "persistent": False,
         }, indent=2)
 
     @server.tool()
@@ -84,6 +100,8 @@ def register_meta_tools(server: FastMCP) -> None:
         root_path: str = ".",
     ) -> str:
         """Builds and registers an execution sandbox environment bound to Rewind and PathCarry safety engines."""
+        if Path(root_path).resolve() != execution.root_path:
+            raise ValueError("Workspace is fixed by the operator")
         builder = (
             EnvironmentBuilder(id)
             .name(name)
@@ -93,11 +111,13 @@ def register_meta_tools(server: FastMCP) -> None:
         )
         cfg = builder.build()
         harness.register_environment(cfg)
-        saved_path = builder.save()
+        # MCP registrations are session-local; exporting definitions is an operator action.
+        saved_path = None
         return json.dumps({
             "status": "created",
             "environment": cfg.to_dict(),
-            "saved_path": str(saved_path),
+            "saved_path": saved_path,
+            "persistent": False,
         }, indent=2)
 
     # Pi Agent Precise Coding Tools
@@ -121,19 +141,22 @@ def register_meta_tools(server: FastMCP) -> None:
     ) -> str:
         """Exact substring replacement with uniqueness validation, StateFresh OCC, and Rewind snapshots."""
         digest_arg = expected_digest if expected_digest else None
-        res = toolkit.edit_file_exact(
-            rel_path,
-            target_content,
-            replacement_content,
-            expected_digest=digest_arg,
-            allow_multiple=allow_multiple,
-        )
+        observed = execution.tools.read(rel_path, limit=2_000_000, strict=True)
+        if digest_arg and observed['sha256'] != digest_arg:
+            raise ValueError('Observed file digest changed')
+        count = observed['text'].count(target_content)
+        if not target_content or count == 0 or (count != 1 and not allow_multiple):
+            raise ValueError('Replacement must match the requested occurrences')
+        content = observed['text'].replace(target_content, replacement_content, -1 if allow_multiple else 1)
+        res = execution.write_file(rel_path, content, expected_sha256=observed['sha256'])
         return json.dumps(res, indent=2)
 
     @server.tool()
-    def coding_write_atomic(rel_path: str, content: str, overwrite: bool = False) -> str:
+    def coding_write_atomic(rel_path: str, content: str, overwrite: bool = False, request_id: str = "") -> str:
         """Atomically writes or overwrites a file with Rewind checkpointing."""
-        return json.dumps(toolkit.write_file_atomic(rel_path, content, overwrite=overwrite), indent=2)
+        if execution.tools.path(rel_path).exists() and not overwrite and not request_id:
+            raise ValueError('File exists; explicitly request overwrite')
+        return json.dumps(execution.write_file(rel_path, content, request_id=request_id or None), indent=2)
 
     @server.tool()
     def coding_find_files(pattern: str = "*.*", search_dir: str = ".") -> str:
@@ -159,6 +182,7 @@ def register_meta_tools(server: FastMCP) -> None:
         tasks_json: str = "",
         chain_json: str = "",
         max_depth: int = 3,
+        model_profile: str = "default",
     ) -> str:
         """DeepCode recursive subagent tool (single, parallel, chain with {previous} piping)."""
         tasks_list = json.loads(tasks_json) if tasks_json else None
@@ -171,6 +195,7 @@ def register_meta_tools(server: FastMCP) -> None:
             task=task,
             tasks=tasks_list,
             chain=chain_list,
+            model_profile=model_profile,
         )
         return json.dumps(res, indent=2)
 
@@ -193,14 +218,16 @@ def register_meta_tools(server: FastMCP) -> None:
         """Inspects binary magic headers, architecture, entry point, and structure."""
         from app.engines.reverse_engineering import BinaryAnalysisEngine
         engine = BinaryAnalysisEngine()
-        info = engine.identify_format(file_path)
+        info = engine.identify_format(str(execution.tools.path(file_path)))
         return json.dumps(info.to_dict(), indent=2)
 
     @server.tool()
     def coding_repo_codemap(workspace_root: str = ".", max_files: int = 50) -> str:
         """Extracts hierarchical repository codemap with symbol nodes and imports."""
         from app.engines.code_ledger import CodeLedgerEngine
-        engine = CodeLedgerEngine(workspace_root=workspace_root)
+        if Path(workspace_root).resolve() != execution.root_path:
+            raise ValueError("Workspace is fixed by the operator")
+        engine = CodeLedgerEngine(workspace_root=str(execution.root_path))
         codemap = engine.build_repo_codemap(max_files=max_files)
         return json.dumps(codemap, indent=2)
 
@@ -218,23 +245,24 @@ def register_meta_tools(server: FastMCP) -> None:
         return meta_immunity_check(error_text)
 
     @server.tool()
-    def meta_dedup_run(command: str, cwd: str = ".", ttl_seconds: float = 60.0) -> str:
-        """Executes deduplicated shell command with memory-cached TTL deduplication."""
-        from app.meta.dedup_cache import DeduplicatedExecutionCache
-        cache = DeduplicatedExecutionCache(default_ttl_seconds=ttl_seconds)
-        res = cache.get_or_run(command, cwd=cwd, ttl_seconds=ttl_seconds)
+    def meta_dedup_run(command: str, cwd: str = ".", ttl_seconds: float = 60.0, request_id: str = "", input_paths: list[str] | None = None) -> str:
+        """Proposes a durable argv command; execution requires exact operator approval."""
+        res = command_cache.get_or_run(command, cwd=cwd, ttl_seconds=ttl_seconds,
+                                       tenant_id="mcp", request_id=request_id or None, input_paths=input_paths or ())
         return json.dumps(res, indent=2)
 
     @server.tool()
-    def meta_once_run(command: str, cwd: str = ".", ttl_seconds: float = 60.0) -> str:
+    def meta_once_run(command: str, cwd: str = ".", ttl_seconds: float = 60.0, request_id: str = "", input_paths: list[str] | None = None) -> str:
         """Legacy alias: Executes deduplicated shell command."""
-        return meta_dedup_run(command, cwd=cwd, ttl_seconds=ttl_seconds)
+        return meta_dedup_run(command, cwd=cwd, ttl_seconds=ttl_seconds, request_id=request_id, input_paths=input_paths)
 
     @server.tool()
     def meta_desktop_action(action_type: str, x: int = 0, y: int = 0, text: str = "", dry_run: bool = True) -> str:
         """Dispatches high-speed desktop automation action (click, move, type) with safety bounds."""
         from app.meta.desktop_bridge import DesktopAutomationBridge
-        bridge = DesktopAutomationBridge(dry_run=dry_run)
+        if not dry_run:
+            raise ValueError("Live desktop control requires a separate operator-controlled adapter")
+        bridge = DesktopAutomationBridge(dry_run=True)
         if action_type == "click":
             res = bridge.click(x, y)
         elif action_type == "type":

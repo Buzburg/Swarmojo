@@ -18,7 +18,7 @@ class AgentBuilder:
         self._description = f"Autonomous specialist agent ({agent_id})"
         self._division = "engineering"
         self._system_prompt = ""
-        self._model_profile = "mock"
+        self._model_profile = "default"
         self._model_override: Optional[Dict[str, Any]] = None
         self._tools: List[str] = []
         self._skills: List[str] = []

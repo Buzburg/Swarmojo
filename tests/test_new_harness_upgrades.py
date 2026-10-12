@@ -185,19 +185,14 @@ def test_antibody_herd_immunity_registry():
     assert any(m.antibody_id == new_ab.antibody_id for m in matched_custom)
 
 
-def test_once_execution_cache():
-    cache = OnceExecutionCache(default_ttl_seconds=5.0)
-    # Run simple echo
+def test_once_execution_cache(tmp_path):
+    cache = OnceExecutionCache(default_ttl_seconds=10.0, workspace_root=tmp_path)
     cmd = f'"{sys.executable}" -c "print(12345)"'
-    res1 = cache.get_or_run(cmd)
-    assert res1["from_cache"] is False
-    assert "12345" in res1["stdout"]
-
-    # Run again - should hit cache
-    res2 = cache.get_or_run(cmd)
-    assert res2["from_cache"] is True
-    assert res2["hits"] == 1
-    assert "12345" in res2["stdout"]
+    first = cache.get_or_run(cmd)
+    assert first['approval_required'] and first['status'] == 'pending'
+    repeated = OnceExecutionCache(workspace_root=tmp_path).get_or_run(cmd)
+    assert repeated['request_id'] == first['request_id']
+    assert repeated['stdout'] == ''  # No implicit execution before operator approval.
 
 
 def test_cli_printing_press():

@@ -26,7 +26,7 @@ PREMADE_AGENTS: List[AgentManifest] = [
             "break them into structured atomic milestones, select appropriate specialist agents, "
             "and ensure deterministic verification before presenting proposals to the operator."
         ),
-        model_profile="ollama-deepseek-r1",
+        model_profile="default",
         tools=["horizon_record_step", "fastgate_triage_tools", "compact_kv_scratchpad", "cortex_shield_forecast", "drift_evaluate_action"],
         skills=["swarm-rehearsal", "horizon-circuit-breaker"],
         memory_policy="compact_kv",
@@ -44,7 +44,7 @@ PREMADE_AGENTS: List[AgentManifest] = [
             "verify StateFresh concurrency locks before mutating files, and delegate subtasks recursively via Prime delegation. "
             "Never allow angular spec drift beyond 65°."
         ),
-        model_profile="ollama-qwen-coder",
+        model_profile="default",
         tools=[
             "coding_read_slice",
             "coding_edit_exact",
@@ -70,7 +70,7 @@ PREMADE_AGENTS: List[AgentManifest] = [
             "You are Argus, Senior QA Reviewer. Review all proposed modifications with extreme diligence. "
             "Verify StateFresh version lease agreements and WorkflowProof cryptographic step receipts."
         ),
-        model_profile="ollama-llama3",
+        model_profile="default",
         tools=["symdex_query", "sieve_compact_logs", "workflowproof_verify_step", "statefresh_check_update", "triad_evaluate_workflow"],
         skills=["sieve-compactor"],
         memory_policy="compact_kv",
@@ -86,7 +86,7 @@ PREMADE_AGENTS: List[AgentManifest] = [
             "You are Hypatia, Knowledge and Retrieval Specialist. Extract line-level facts and ground all conclusions "
             "in repository documentation, docstrings, and verified project lessons."
         ),
-        model_profile="ollama-deepseek-r1",
+        model_profile="default",
         tools=["symdex_query", "compact_kv_scratchpad", "titans_memory_recall"],
         skills=["titans-memory"],
         memory_policy="titans",
@@ -102,7 +102,7 @@ PREMADE_AGENTS: List[AgentManifest] = [
             "You are Vulcan, DevOps & Terminal Operator. Execute commands safely in the environment sandbox. "
             "Compact verbose compiler dumps through Sieve to preserve error traces while suppressing noise."
         ),
-        model_profile="ollama-qwen-coder",
+        model_profile="default",
         tools=["sieve_compact_logs", "rewind_snapshot_workspace", "rewind_rollback_workspace"],
         skills=["sieve-compactor", "rewind-snapshotter"],
         memory_policy="compact_kv",
@@ -118,7 +118,7 @@ PREMADE_AGENTS: List[AgentManifest] = [
             "You are Aegis, Security Auditor. Enforce strict filesystem sanitization and verify paths "
             "against Windows reserved device names, directory traversal, and permission leaks."
         ),
-        model_profile="ollama-llama3",
+        model_profile="default",
         tools=["path_carry_audit", "rewind_snapshot_workspace"],
         skills=["polyharness-builder"],
         memory_policy="compact_kv",
@@ -134,7 +134,7 @@ PREMADE_AGENTS: List[AgentManifest] = [
             "You are Mnemosyne, Memory Curator. Track state transitions, extract durable facts into Titans neural memory, "
             "and compact working memory to prevent context saturation."
         ),
-        model_profile="ollama-deepseek-r1",
+        model_profile="default",
         tools=["titans_memory_update", "titans_memory_recall", "compact_kv_scratchpad"],
         skills=["titans-memory"],
         memory_policy="titans",
@@ -151,7 +151,7 @@ PREMADE_AGENTS: List[AgentManifest] = [
             "Rembrandt lighting), multi-shot storyboard sequencing, diffusion execution graphs, and pixel-perfect banner/UI craft. "
             "Never generate timid, generic prompts; compile authoritative optics, focal lengths, aperture depths, and camera motions."
         ),
-        model_profile="ollama-qwen-coder",
+        model_profile="default",
         tools=[
             "studio_compile_prompt",
             "studio_create_storyboard",
@@ -175,7 +175,7 @@ PREMADE_AGENTS: List[AgentManifest] = [
             "WCAG AAA contrast (≥7:1 body, ≥4.5:1 secondary), 65-75ch measure, soft zero-halo depth, and clean typographic rhythms. "
             "Never build safe, timid, or generic interfaces; make every surface feel out-of-distribution in craft."
         ),
-        model_profile="ollama-qwen-coder",
+        model_profile="default",
         tools=[
             "design_build_landing_page",
             "design_build_dashboard",
@@ -200,7 +200,7 @@ PREMADE_AGENTS: List[AgentManifest] = [
             "('delve into', 'in today's landscape', 'testament to', 'tapestry'), eliminate editorializing inflation words, "
             "and craft concrete, grounded narratives."
         ),
-        model_profile="ollama-qwen-coder",
+        model_profile="default",
         tools=[
             "writer_audit_prose",
             "writer_clean_prose",
@@ -224,7 +224,7 @@ PREMADE_AGENTS: List[AgentManifest] = [
             "verified multi-step pipelines with zero failure tolerance, schedule recurring background routines, "
             "and audit every execution step with Merkle proof verification."
         ),
-        model_profile="ollama-qwen-coder",
+        model_profile="default",
         tools=[
             "workflow_run_dag",
             "workflow_schedule_routine",
@@ -247,7 +247,7 @@ PREMADE_AGENTS: List[AgentManifest] = [
             "You maintain the Operator's daily agenda, protect local encrypted credentials, delegate "
             "complex requests to specialist agent guilds, and deliver concise, high-agency results."
         ),
-        model_profile="ollama-r1",
+        model_profile="default",
         tools=[
             "assistant_get_briefing",
             "assistant_consult_specialist",

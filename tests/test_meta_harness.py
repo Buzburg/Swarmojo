@@ -117,6 +117,9 @@ def test_execution_environment_sandbox(tmp_path: Path):
 
     # Test file write with automatic snapshot
     write_res = env.write_file("module.py", "x = 42")
+    assert write_res['approval_required'] and not (tmp_path / 'module.py').exists()
+    env.store.approve(write_res['request_id'], write_res['fingerprint'])
+    write_res = env.write_file('module.py', 'x = 42', request_id=write_res['request_id'])
     assert write_res["success"] is True
     assert write_res["snapshot"] is not None
 
@@ -131,8 +134,8 @@ def test_execution_environment_sandbox(tmp_path: Path):
 
     # Test command execution
     cmd_res = env.execute_command(["python", "-c", "print('hello from sandbox')"])
-    assert cmd_res["success"] is True
-    assert "hello from sandbox" in cmd_res["output"]
+    assert cmd_res['approval_required'] and not cmd_res['success']
+    assert env.store.inspect(cmd_res['request_id'])['status'] == 'pending'
 
 
 def test_meta_agent_instance(tmp_path: Path):

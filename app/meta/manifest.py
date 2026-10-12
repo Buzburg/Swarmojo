@@ -22,7 +22,7 @@ class AgentManifest:
     description: str
     division: str = "engineering"  # engineering, orchestration, quality, research, operations, security
     system_prompt: str = ""
-    model_profile: str = "mock"  # Key into ModelRegistry, e.g. "ollama-qwen-coder", "ollama-deepseek-r1"
+    model_profile: str = "default"  # Key into ModelRegistry, e.g. "ollama-qwen-coder", "ollama-deepseek-r1"
     model_override: Optional[Dict[str, Any]] = None  # Inline ModelConfig dict
     tools: List[str] = field(default_factory=list)
     skills: List[str] = field(default_factory=list)

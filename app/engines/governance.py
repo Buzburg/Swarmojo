@@ -7,10 +7,34 @@ scheduling, goal/task issues with dependency blocking, and human-in-the-loop app
 from __future__ import annotations
 
 import json
+import math
+import uuid
+from functools import wraps
+from app.control_store import ControlStore, packed
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+
+def durable(write=False):
+    def decorate(method):
+        @wraps(method)
+        def wrapped(self, *args, **kwargs):
+            with self.store.transaction() as db:
+                self._restore(json.loads(db.execute("SELECT value FROM state WHERE name='governance'").fetchone()[0]))
+                result = method(self, *args, **kwargs)
+                if write:
+                    db.execute("UPDATE state SET value=? WHERE name='governance'", (packed(self._state()),))
+                return result
+        return wrapped
+    return decorate
+
+
+def amount(value):
+    if isinstance(value, bool) or not isinstance(value, (float, int)) or not math.isfinite(value) or value < 0:
+        raise ValueError('Budget amounts must be finite and nonnegative')
+    return value
 
 
 @dataclass
@@ -20,7 +44,7 @@ class AgentEmployee:
     role: str
     tier: str  # "executive", "lead", "specialist", "auditor"
     reports_to: Optional[str] = None
-    model: str = "deepseek-r1"
+    model: str = "default"
     budget_cap_usd: float = 50.0
     current_spend_usd: float = 0.0
     token_cap: int = 2_000_000
@@ -69,10 +93,10 @@ class ApprovalItem:
 class HarnessGovernanceEngine:
     """Manages multi-agent organizational structure, budgets, tasks, and approval gates."""
 
-    def __init__(self, workspace_root: str = "."):
+    def __init__(self, workspace_root: str = ".", *, state_dir=None, demo=False):
         self.workspace_root = Path(workspace_root).resolve()
-        self.storage_dir = self.workspace_root / ".swarmmojo" / "governance"
-        self.storage_dir.mkdir(parents=True, exist_ok=True)
+        self.store = ControlStore(self.workspace_root, state_dir)
+        self.storage_dir = self.store.directory
 
         self._employees: Dict[str, AgentEmployee] = {}
         self._tasks: Dict[str, TaskIssue] = {}
@@ -94,7 +118,26 @@ class HarnessGovernanceEngine:
             },
         }
 
-        self._init_defaults()
+        self._reservations = {}
+        if demo:
+            self._init_defaults()
+        with self.store.transaction() as db:
+            db.execute("INSERT OR IGNORE INTO state VALUES ('governance',?)", (packed(self._state()),))
+            self._restore(json.loads(db.execute("SELECT value FROM state WHERE name='governance'").fetchone()[0]))
+
+    def _state(self):
+        return {'employees': {k: v.to_dict() for k, v in self._employees.items()},
+                'tasks': {k: v.to_dict() for k, v in self._tasks.items()},
+                'approvals': {k: v.to_dict() for k, v in self._approvals.items()},
+                'settings': self._settings, 'reservations': self._reservations}
+
+    def _restore(self, state):
+        self._employees = {k: AgentEmployee(**v) for k, v in state['employees'].items()}
+        self._tasks = {k: TaskIssue(**v) for k, v in state['tasks'].items()}
+        self._approvals = {k: ApprovalItem(**v) for k, v in state['approvals'].items()}
+        self._settings = state['settings']
+        self._reservations = state.get('reservations', {})
+
 
     def _init_defaults(self) -> None:
         """Seed default corporate hierarchy and sample tasks/approvals."""
@@ -272,6 +315,7 @@ class HarnessGovernanceEngine:
             self._approvals[a.id] = a
 
     # Org Chart
+    @durable()
     def get_org_chart(self) -> Dict[str, Any]:
         """Returns organizational tree with reporting relationships and budget statistics."""
         nodes = []
@@ -287,18 +331,24 @@ class HarnessGovernanceEngine:
             "edges": edges,
         }
 
+    @durable(write=True)
     def hire_agent(
         self,
         agent_id: str,
         name: str,
         role: str,
         tier: str = "specialist",
-        reports_to: Optional[str] = "atlas",
-        model: str = "deepseek-r1",
+        reports_to: Optional[str] = None,
+        model: str = "default",
         budget_cap_usd: float = 30.0,
         avatar: str = "🤖",
     ) -> Dict[str, Any]:
         """Hire/register a new autonomous agent into the company hierarchy."""
+        if agent_id in self._employees:
+            raise ValueError('Agent already registered; cannot reset spend by registering again')
+        amount(budget_cap_usd)
+        if reports_to and reports_to not in self._employees:
+            raise ValueError('Unknown reporting agent')
         emp = AgentEmployee(
             id=agent_id,
             name=name,
@@ -313,15 +363,19 @@ class HarnessGovernanceEngine:
         return {"status": "hired", "agent": emp.to_dict()}
 
     # Budget & Governance
+    @durable()
     def get_budget_summary(self) -> Dict[str, Any]:
         """Calculates total spend vs caps and per-agent metrics."""
         total_spent = sum(e.current_spend_usd for e in self._employees.values())
         total_cap = sum(e.budget_cap_usd for e in self._employees.values())
         hard_cap = self._settings["cost_hard_cap_usd"]
+        reserved = {k: v for k, v in self._reservations.items() if v["status"] == "reserved"}
 
         return {
             "total_spend_usd": round(total_spent, 2),
             "allocated_cap_usd": round(total_cap, 2),
+            "reserved_cost_usd": sum(v["cost_usd"] for v in reserved.values()),
+            "reservations": reserved,
             "organization_hard_cap_usd": round(hard_cap, 2),
             "budget_used_percentage": round((total_spent / max(hard_cap, 1.0)) * 100.0, 1),
             "agents_over_budget": [
@@ -342,6 +396,7 @@ class HarnessGovernanceEngine:
         }
 
     # Heartbeat System
+    @durable(write=True)
     def trigger_heartbeat(self, agent_id: Optional[str] = None) -> Dict[str, Any]:
         """Wakes up agents on demand or triggers the scheduled execution pulse."""
         now = time.time()
@@ -366,6 +421,7 @@ class HarnessGovernanceEngine:
         }
 
     # Task & Issue Tracking (Kanban)
+    @durable()
     def list_tasks(self) -> Dict[str, List[Dict[str, Any]]]:
         """Returns issues organized by Kanban column."""
         columns: Dict[str, List[Dict[str, Any]]] = {
@@ -380,6 +436,7 @@ class HarnessGovernanceEngine:
             columns[st].append(t.to_dict())
         return columns
 
+    @durable(write=True)
     def create_task(
         self,
         task_id: str,
@@ -390,6 +447,13 @@ class HarnessGovernanceEngine:
         blocked_by: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Creates an issue and assigns it to an agent."""
+        dependencies = blocked_by or []
+        if task_id in self._tasks or task_id in dependencies:
+            raise ValueError('Task IDs are unique and cannot depend on themselves')
+        if not isinstance(dependencies, list) or any(x not in self._tasks for x in dependencies):
+            raise ValueError('Dependencies must name existing tasks')
+        if assignee_id not in self._employees:
+            raise ValueError('Unknown task assignee')
         issue = TaskIssue(
             id=task_id,
             title=title,
@@ -401,16 +465,25 @@ class HarnessGovernanceEngine:
         self._tasks[task_id] = issue
         return {"status": "created", "task": issue.to_dict()}
 
+    @durable(write=True)
     def update_task_status(self, task_id: str, new_status: str) -> Dict[str, Any]:
         """Moves a task across Kanban columns."""
         if task_id not in self._tasks:
             raise ValueError(f"Task {task_id} not found.")
         task = self._tasks[task_id]
+        transitions = {'backlog': {'in_progress', 'blocked'}, 'in_progress': {'review', 'blocked'},
+                       'blocked': {'backlog', 'in_progress'}, 'review': {'done', 'in_progress'}, 'done': set()}
+        if new_status not in transitions.get(task.status, set()):
+            raise ValueError('Invalid task status transition')
+        if new_status in {'in_progress', 'review', 'done'} and any(
+                self._tasks[x].status != 'done' for x in task.blocked_by):
+            raise ValueError('Task has unfinished dependencies')
         task.status = new_status
         task.updated_at = time.time()
         return {"status": "updated", "task": task.to_dict()}
 
     # Human Approval Queue
+    @durable()
     def list_approvals(self, pending_only: bool = False) -> List[Dict[str, Any]]:
         """Returns approval gates for high-stakes actions."""
         res = []
@@ -420,20 +493,68 @@ class HarnessGovernanceEngine:
             res.append(a.to_dict())
         return res
 
+    @durable(write=True)
     def resolve_approval(self, approval_id: str, action: str, approver: str = "HumanAdmin") -> Dict[str, Any]:
         """Approves or rejects a gated action."""
         if approval_id not in self._approvals:
             raise ValueError(f"Approval item {approval_id} not found.")
         item = self._approvals[approval_id]
+        if action not in {'approve', 'reject'} or item.status != 'pending':
+            raise ValueError('Only pending approvals can be explicitly approved or rejected')
         item.status = "approved" if action == "approve" else "rejected"
         item.resolved_at = time.time()
         item.resolved_by = approver
         return {"status": "resolved", "decision": item.status, "item": item.to_dict()}
 
     # Harness Options & BYOA Settings
+    @durable()
     def get_settings(self) -> Dict[str, Any]:
-        return self._settings
+        return json.loads(packed(self._settings))
 
+    @durable(write=True)
     def update_settings(self, updates: Dict[str, Any]) -> Dict[str, Any]:
+        if not isinstance(updates, dict) or not set(updates) <= set(self._settings):
+            raise ValueError('Unknown governance settings')
+        if 'cost_hard_cap_usd' in updates: amount(updates['cost_hard_cap_usd'])
         self._settings.update(updates)
         return {"status": "updated", "settings": self._settings}
+
+
+    @durable(write=True)
+    def reserve(self, agent_id, tokens, cost_usd, request_id):
+        """Reserve the worst-case cost atomically before a provider is contacted."""
+        amount(cost_usd)
+        if type(tokens) is not int or tokens < 0:
+            raise ValueError('Token reservation must be a nonnegative integer')
+        if request_id in self._reservations:
+            raise ValueError('Model request was already dispatched or reserved')
+        agent = self._employees.get(agent_id)
+        if not agent:
+            raise ValueError('Agent must be registered before inference')
+        held = [v for v in self._reservations.values() if v['status'] == 'reserved']
+        own = [v for v in held if v['agent_id'] == agent_id]
+        if (agent.current_spend_usd + sum(v['cost_usd'] for v in own) + cost_usd > agent.budget_cap_usd
+                or agent.tokens_used + sum(v['tokens'] for v in own) + tokens > agent.token_cap
+                or sum(a.current_spend_usd for a in self._employees.values())
+                   + sum(v['cost_usd'] for v in held) + cost_usd > self._settings['cost_hard_cap_usd']):
+            raise ValueError('Budget exhausted before provider dispatch')
+        self._reservations[request_id] = {'agent_id': agent_id, 'tokens': tokens,
+                                        'cost_usd': cost_usd, 'status': 'reserved'}
+        return dict(self._reservations[request_id])
+
+    @durable(write=True)
+    def settle(self, request_id, tokens=None, cost_usd=None):
+        """Unknown usage conservatively consumes the full reservation; never silently free it."""
+        entry = self._reservations[request_id]
+        if entry['status'] != 'reserved':
+            raise ValueError('Model request already settled')
+        tokens = entry['tokens'] if tokens is None else tokens
+        cost_usd = entry['cost_usd'] if cost_usd is None else cost_usd
+        amount(cost_usd)
+        if type(tokens) is not int or tokens < 0:
+            raise ValueError('Invalid measured token usage')
+        agent = self._employees[entry['agent_id']]
+        agent.tokens_used += tokens
+        agent.current_spend_usd += cost_usd
+        entry.update(status='settled', actual_tokens=tokens, actual_cost_usd=cost_usd)
+        return dict(entry)

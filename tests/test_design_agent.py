@@ -141,7 +141,7 @@ def test_design_engine_build_herald_hud_alias(tmp_path: Path):
 
 def test_harness_governance_engine(tmp_path: Path):
     from app.engines.governance import HarnessGovernanceEngine
-    gov = HarnessGovernanceEngine(workspace_root=str(tmp_path))
+    gov = HarnessGovernanceEngine(workspace_root=str(tmp_path), demo=True)
     org = gov.get_org_chart()
     assert org["total_headcount"] == 6
     assert len(org["edges"]) >= 4

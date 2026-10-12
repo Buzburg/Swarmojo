@@ -47,7 +47,7 @@ Prefer the CLI?
    ```
 
 ### No account, no cloud, zero telemetry.
-The harness runs 100% locally on your machine. Your code, system prompts, models, and execution logs never touch a third-party server.
+Swarmojo runs on your machine and can use entirely local models. If you configure a remote provider, prompts and selected context are sent to that provider. No specific model family or operating-system build is required.
 
 **This is an explicit deterministic governance harness, not an opaque cloud wrapper.** You declare agent roles, budget ceilings, and rollback invariants. Swarmojo enforces them with mathematical rigor.
 
@@ -175,7 +175,7 @@ approval = gov_request_approval(
 | **TitanDelta** | Test-Time Neural Associative Memory with surprise gating | `python roms.py titandelta` | `titandelta_memory_update` |
 | **GitGuard** | Sub-millisecond git micro-checkpoints with auto-rollback | `python roms.py git-guard` | `rewind_snapshot_workspace` |
 | **HerdImmunity** | Swarm herd immunity memory broadcasting instant bug remedies | `python roms.py meta immunity` | `meta_immunity_check` |
-| **DedupCache** | Deduplicated shell command execution with memory TTL hashing | `python roms.py meta dedup` | `meta_dedup_run` |
+| **DedupCache** | Durable command receipts with scoped, approval-gated retries | `python roms.py meta dedup` | `meta_dedup_run` |
 | **PhaseGate** | 256-dim phase vector System-1 tool triage router (<50 µs) | `python roms.py phasegate` | `phasegate_triage_tools` |
 | **Mojo-Drift** | 256-dim angular trajectory tracking (warn $\ge 65^\circ$, block $\ge 80^\circ$) | `python roms.py drift` | `drift_evaluate_action` |
 | **Sieve** | Streaming compiler & terminal log compaction (95%+ noise reduction) | `python roms.py sieve` | `sieve_compact_logs` |
@@ -186,6 +186,17 @@ approval = gov_request_approval(
 | **ToolMender** | JSON auto-repair, balance extraction & schema coercion | `python roms.py toolmender` | `toolmender_repair_output` |
 
 ---
+
+## Model-agnostic agent runtime
+
+Coding, research, review, and coordination agents use operator-selected model profiles.
+Use an OpenAI-compatible local or remote endpoint, or register a provider adapter for
+another protocol. Premade agents use `default`; mock output requires explicit selection.
+
+The meta runtime includes persistent approvals and budgets, workspace-confined commands,
+killable worker processes, receipt-backed memory scoped to each agent/run, and durable
+request replay. Read the [runtime setup and approval guide](docs/meta-runtime.md) for
+configuration, executable examples, and platform limits.
 
 ## The Buzburg Tangle Suite
 

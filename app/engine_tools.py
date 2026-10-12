@@ -516,8 +516,8 @@ def register_engine_tools(server: FastMCP) -> None:
         name: str,
         role: str,
         tier: str = "specialist",
-        reports_to: str = "atlas",
-        model: str = "deepseek-r1",
+        reports_to: str = "",
+        model: str = "default",
         budget_cap_usd: float = 30.0,
         avatar: str = "🤖",
     ) -> str:
@@ -530,7 +530,7 @@ def register_engine_tools(server: FastMCP) -> None:
                 name=name,
                 role=role,
                 tier=tier,
-                reports_to=reports_to,
+                reports_to=reports_to or None,
                 model=model,
                 budget_cap_usd=budget_cap_usd,
                 avatar=avatar,
@@ -599,8 +599,7 @@ def register_engine_tools(server: FastMCP) -> None:
     def harness_resolve_approval(approval_id: str, action: str = "approve", approver: str = "HumanAdmin") -> str:
         """Approves or rejects a gated action."""
         from app.engines.governance import HarnessGovernanceEngine
-        engine = HarnessGovernanceEngine()
-        return json.dumps(engine.resolve_approval(approval_id=approval_id, action=action, approver=approver), indent=2)
+        return json.dumps({"ok": False, "error": "Operator-only action: use the local governance CLI"})
 
     @server.tool()
     def harness_get_settings() -> str:

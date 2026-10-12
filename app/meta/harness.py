@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import json
 import time
+import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -32,7 +33,7 @@ class MetaHarness:
         self.model_client = ModelClient(registry=self.model_registry)
 
         self.antibody = AntibodyRegistry()
-        self.once_cache = OnceExecutionCache()
+        self.once_cache = OnceExecutionCache(workspace_root=self.workspace_root)
         self.printing_press = CliPrintingPress()
         self.screenhand = ScreenhandDesktopBridge()
         self.everywhere = EverywhereDispatcher()
@@ -128,6 +129,7 @@ class MetaHarness:
         self,
         agent_id: str,
         model_override: Optional[str] = None,
+        run_id: Optional[str] = None,
     ) -> MetaAgentInstance:
         """Instantiate an active agent with its resolved model configuration."""
         manifest = self.get_agent(agent_id)
@@ -137,6 +139,7 @@ class MetaHarness:
         if model_override:
             manifest_dict = manifest.to_dict()
             manifest_dict["model_profile"] = model_override
+            manifest_dict["model_override"] = None
             manifest = AgentManifest.from_dict(manifest_dict)
 
         return MetaAgentInstance(
@@ -144,6 +147,7 @@ class MetaHarness:
             model_client=self.model_client,
             model_registry=self.model_registry,
             workspace_root=str(self.workspace_root),
+            run_id=run_id,
         )
 
     # Multi-Agent Orchestration
@@ -160,17 +164,22 @@ class MetaHarness:
         if not team:
             raise ValueError(f"Team '{team_id}' not found.")
 
-        env_cfg = self.get_environment(env_id) or self._envs["default"]
+        env_cfg = self.get_environment(env_id)
+        if env_cfg is None:
+            raise ValueError("Unknown execution environment: " + env_id)
+        if Path(env_cfg.root_path).resolve() != self.workspace_root:
+            raise ValueError("Environment must use the operator-selected workspace")
         env = ExecutionEnvironment(env_cfg)
 
         model_overrides = model_overrides or {}
         global_override = model_overrides.get("all")
 
+        run_id = uuid.uuid4().hex
         # Instantiate members
         instances: Dict[str, MetaAgentInstance] = {}
         for m_id in team.member_ids:
             override = global_override or model_overrides.get(m_id)
-            instances[m_id] = self.create_agent_instance(m_id, model_override=override)
+            instances[m_id] = self.create_agent_instance(m_id, model_override=override, run_id=run_id)
 
         coordinator = instances.get(team.coordinator_id)
         if not coordinator:
@@ -239,6 +248,8 @@ class MetaHarness:
 
         return {
             "task": task,
+            "run_id": run_id,
+            "simulated": any(t.get("simulated", False) for t in turns),
             "team_id": team_id,
             "team_name": team.name,
             "mode": team.mode,

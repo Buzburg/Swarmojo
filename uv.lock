@@ -2507,10 +2507,11 @@ wheels = [
 ]
 
 [[package]]
-name = "swarm-tangle"
+name = "swarmojo"
 version = "1.0.0"
 source = { editable = "." }
 dependencies = [
+    { name = "cloudpickle" },
     { name = "fastmcp" },
     { name = "httpx" },
     { name = "jinja2" },
@@ -2536,6 +2537,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cloudpickle", specifier = ">=3.1.0" },
     { name = "fastmcp", specifier = ">=0.4.0" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "jinja2", specifier = ">=3.1.0" },

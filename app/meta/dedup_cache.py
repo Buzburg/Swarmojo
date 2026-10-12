@@ -1,21 +1,15 @@
-"""Deduplicated Command Execution Cache for Swarmojo by Buzburg AI.
+"""Durable, scoped command requests; only operator-approved actions execute.
 
-Execution deduplication cache architecture by Buzburg AI:
-- Run expensive commands once, cache outputs in memory for a configurable TTL.
-- Eliminates redundant tool invocations (e.g. repeated git status, system probes, lints).
-- Content and environment-hashed keys with per-session isolation.
-- Concurrent batch execution support for multi-command workloads.
+A request ID gives at-most-once dispatch across retries and restarts. A crashed
+in-flight request is uncertain and is never silently executed again.
 """
 from __future__ import annotations
 
-import hashlib
-import os
-import subprocess
 import time
-from dataclasses import asdict, dataclass, field
+import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-
+from dataclasses import dataclass, asdict
+from typing import Dict, Any
 
 @dataclass
 class DedupEntry:
@@ -41,102 +35,59 @@ class DedupEntry:
 OnceEntry = DedupEntry
 
 
+
+
+from app.control_store import digest, packed
+from app.meta.environment import ExecutionEnvironment
+from app.meta.manifest import EnvironmentConfig
+
+
 class DeduplicatedExecutionCache:
-    """In-memory cache daemon for command deduplication."""
-
-    def __init__(self, default_ttl_seconds: float = 60.0):
+    def __init__(self, default_ttl_seconds=60.0, *, workspace_root='.', state_dir=None):
         self.default_ttl = default_ttl_seconds
-        self.cache: Dict[str, DedupEntry] = {}
+        self.root = Path(workspace_root).resolve()
+        self.state_dir = state_dir
 
-    def _compute_key(self, command: str, cwd: str, tenant_id: str = "default") -> str:
-        norm_cwd = str(Path(cwd).resolve())
-        raw = f"{tenant_id}:{norm_cwd}:{command.strip()}"
-        return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    def get_or_run(self, command, cwd='.', ttl_seconds=None, tenant_id='default', force_refresh=False,
+                   *, request_id=None, input_paths=()):
+        cwd = self.root if cwd == '.' else Path(cwd).resolve()
+        if cwd != self.root:
+            raise ValueError('Command workspace is fixed by the operator')
+        if not isinstance(tenant_id, str) or not 1 <= len(tenant_id) <= 128:
+            raise ValueError('Invalid execution scope')
+        ttl = self.default_ttl if ttl_seconds is None else ttl_seconds
+        if not 0 < ttl <= 86400: raise ValueError('TTL must be 0..86400 seconds')
+        env = ExecutionEnvironment(EnvironmentConfig(id='dedup', name='Deduplicated execution',
+                    root_path=str(self.root), snapshot_on_action=False), state_dir=self.state_dir, scope=tenant_id)
+        inputs = {name: env.tools.read(name)['sha256'] for name in input_paths}
+        key = 'dedup:' + digest({'command': command, 'scope': tenant_id, 'inputs': inputs})
+        if request_id is None:
+            with env.store.transaction() as db:
+                row = db.execute('SELECT value FROM state WHERE name=?', (key,)).fetchone()
+                import json
+                value = json.loads(row['value']) if row else None
+                if not value or value['expires'] < time.time() or force_refresh:
+                    value = {'id': uuid.uuid4().hex, 'expires': time.time() + ttl}
+                    db.execute('INSERT OR REPLACE INTO state VALUES (?,?)', (key, packed(value)))
+                request_id = value['id']
+        result = env.execute_command(command, request_id=request_id, input_paths=input_paths)
+        return {**result, 'request_id': request_id, 'from_cache': result.get('replayed', False),
+                'stdout': result.get('output', ''), 'stderr': result.get('error', ''),
+                'exit_code': result.get('returncode', -1), 'hits': int(result.get('replayed', False))}
 
-    def get_or_run(
-        self,
-        command: str,
-        cwd: str = ".",
-        ttl_seconds: Optional[float] = None,
-        tenant_id: str = "default",
-        force_refresh: bool = False,
-    ) -> Dict[str, Any]:
-        """Returns cached output if available and unexpired, otherwise executes and caches."""
-        key = self._compute_key(command, cwd, tenant_id)
-        ttl = ttl_seconds if ttl_seconds is not None else self.default_ttl
-
-        if not force_refresh and key in self.cache:
-            entry = self.cache[key]
-            if not entry.is_expired:
-                entry.hits += 1
-                return {
-                    "from_cache": True,
-                    "command": entry.command,
-                    "stdout": entry.stdout,
-                    "stderr": entry.stderr,
-                    "exit_code": entry.exit_code,
-                    "hits": entry.hits,
-                    "age_s": round(time.time() - entry.executed_at, 2),
-                }
-
-        # Execute command
-        start = time.time()
-        try:
-            res = subprocess.run(
-                command,
-                cwd=cwd,
-                shell=True,
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
-            stdout = res.stdout
-            stderr = res.stderr
-            exit_code = res.returncode
-        except Exception as e:
-            stdout = ""
-            stderr = str(e)
-            exit_code = -1
-
-        entry = DedupEntry(
-            key_hash=key,
-            command=command,
-            cwd=cwd,
-            stdout=stdout,
-            stderr=stderr,
-            exit_code=exit_code,
-            executed_at=time.time(),
-            ttl_seconds=ttl,
-            hits=0,
-        )
-        self.cache[key] = entry
-
-        return {
-            "from_cache": False,
-            "command": command,
-            "stdout": stdout,
-            "stderr": stderr,
-            "exit_code": exit_code,
-            "hits": 0,
-            "execution_ms": round((time.time() - start) * 1000, 2),
-        }
-
-    def run_batch(self, commands: List[str], cwd: str = ".", ttl_seconds: Optional[float] = None) -> List[Dict[str, Any]]:
-        """Executes a list of commands sequentially, deduplicating each against the cache."""
+    def run_batch(self, commands, cwd='.', ttl_seconds=None):
         return [self.get_or_run(cmd, cwd=cwd, ttl_seconds=ttl_seconds) for cmd in commands]
 
-    def purge_expired(self) -> int:
-        expired_keys = [k for k, v in self.cache.items() if v.is_expired]
-        for k in expired_keys:
-            del self.cache[k]
-        return len(expired_keys)
+    def purge_expired(self):
+        # Request receipts and uncertain effects must outlive cache expiry.
+        return 0
 
-    def stats(self) -> Dict[str, Any]:
-        return {
-            "total_entries": len(self.cache),
-            "total_hits": sum(v.hits for v in self.cache.values()),
-        }
+    def stats(self):
+        env = ExecutionEnvironment(EnvironmentConfig(id='cache', name='Cache', root_path=str(self.root),
+                                   snapshot_on_action=False), state_dir=self.state_dir)
+        with env.store.transaction() as db:
+            return {'total_entries': db.execute('SELECT count(*) FROM requests').fetchone()[0],
+                    'durable': True}
 
 
-# Backward-compatible alias
 OnceExecutionCache = DeduplicatedExecutionCache

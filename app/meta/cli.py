@@ -52,7 +52,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     ca_p.add_argument("--name", required=True, help="Display name")
     ca_p.add_argument("--role", required=True, help="Role description")
     ca_p.add_argument("--division", default="engineering", help="Agent division")
-    ca_p.add_argument("--model", default="mock", help="Model profile name")
+    ca_p.add_argument("--model", default="default", help="Model profile name")
     ca_p.add_argument("--tools", default="", help="Comma-separated tool names")
     ca_p.add_argument("--prompt", default="", help="Core system instructions")
 

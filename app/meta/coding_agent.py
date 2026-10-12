@@ -74,10 +74,8 @@ class PiCodingToolkit:
         self.ledger = CodeLedgerEngine(workspace_root=self.root)
 
     def _resolve_safe_path(self, rel_path: str) -> Path:
-        target = (self.root / rel_path).resolve()
-        if not str(target).startswith(str(self.root)):
-            raise ValueError(f"Path traversal forbidden: {rel_path}")
-        return target
+        from aeon.tools import Tools
+        return Tools(self.root).path(rel_path)
 
     def read_file_slice(
         self,
@@ -318,7 +316,7 @@ class PrimeRecursionEngine:
         task: str,
         parent_goal: str,
         current_depth: int = 1,
-        model_profile: str = "mock",
+        model_profile: str = "default",
     ) -> SubagentResult:
         """Runs a single recursive subagent in an isolated context window."""
         start = time.perf_counter()
@@ -349,7 +347,6 @@ class PrimeRecursionEngine:
             )
 
         # 3. Model completion in isolated context
-        model_cfg = self.registry.get(model_profile)
         messages = [
             {
                 "role": "system",
@@ -361,7 +358,15 @@ class PrimeRecursionEngine:
             },
             {"role": "user", "content": task},
         ]
-        res = self.client.generate(model_cfg, messages)
+        from app.meta.agent import MetaAgentInstance
+        from app.meta.manifest import AgentManifest
+        specialist = MetaAgentInstance(
+            AgentManifest(id='recursive-' + agent_role, name=agent_role, role=agent_role,
+                          description='Bounded delegated specialist', model_profile=model_profile,
+                          system_prompt=messages[0]['content'], memory_policy='none'),
+            model_client=self.client, model_registry=self.registry, workspace_root=str(self.root),
+        )
+        res = specialist.execute_turn(task)
         latency_ms = (time.perf_counter() - start) * 1000.0
 
         # Record Triad metrics
@@ -381,6 +386,7 @@ class PrimeRecursionEngine:
             status="success",
             drift_angle_deg=drift_angle,
             latency_ms=round(latency_ms, 2),
+            metadata={"simulated": res.get("simulated", False), "run_id": res["run_id"]},
         )
 
     def execute_delegation(
@@ -392,7 +398,7 @@ class PrimeRecursionEngine:
         task: str = "",
         tasks: Optional[List[Dict[str, str]]] = None,
         chain: Optional[List[Dict[str, str]]] = None,
-        model_profile: str = "mock",
+        model_profile: str = "default",
     ) -> Dict[str, Any]:
         """DeepCode three-mode recursive delegation engine."""
         if mode == "single":

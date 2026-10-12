@@ -1,107 +1,103 @@
-"""Parallel Tool Dispatcher for Swarmojo by Buzburg AI.
-
-Concurrent tool and subtask execution architecture by Buzburg AI:
-- Dispatches batches of independent agent operations concurrently across a lightweight thread pool
-- Sub-millisecond dispatch overhead with per-task timeout enforcement and error isolation
-- Computes concurrency metrics, aggregated elapsed duration, and speedup factor
-"""
+"""Concurrent trusted callables in owned, killable processes; never model-supplied code."""
 from __future__ import annotations
 
-import concurrent.futures
+from dataclasses import asdict, dataclass
+import multiprocessing
 import time
-from dataclasses import asdict, dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
+import cloudpickle
+
+from app.meta.processes import stop_worker, windows_job
 
 
 @dataclass
 class TaskExecutionResult:
     task_id: str
-    status: str          # "completed", "error", "timeout"
+    status: str
     result: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     duration_ms: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self):
         return asdict(self)
 
 
-class ParallelToolDispatcher:
-    """Dispatches independent agent tool calls in parallel with error isolation and timeout safeguards."""
+def _worker(payload, channel):
+    job = windows_job()
+    try:
+        fn = cloudpickle.loads(payload)
+        start = time.monotonic()
+        try:
+            result = {'status': 'completed', 'result': fn(), 'error': None}
+        except Exception as exc:
+            result = {'status': 'error', 'result': None, 'error': str(exc)}
+        result['duration_ms'] = (time.monotonic() - start) * 1000
+        encoded = cloudpickle.dumps(result)
+        if len(encoded) > 1024 * 1024:
+            encoded = cloudpickle.dumps({'status': 'error', 'error': 'Result exceeds 1 MiB', 'result': None,
+                                         'duration_ms': result['duration_ms']})
+        channel.send_bytes(encoded)
+    finally:
+        channel.close()
 
-    def __init__(self, max_workers: int = 8, default_timeout_s: float = 10.0):
-        self.max_workers = max(1, max_workers)
+
+class ParallelToolDispatcher:
+    """Process isolation: task mutations of parent Python objects are not shared."""
+    def __init__(self, max_workers=8, default_timeout_s=10.0):
+        if type(max_workers) is not int or not 1 <= max_workers <= 64:
+            raise ValueError('Worker count must be 1..64')
+        self.max_workers = max_workers
         self.default_timeout_s = default_timeout_s
 
-    def execute_batch(
-        self,
-        tasks: List[Tuple[str, Callable[[], Any]]],
-        timeout_s: Optional[float] = None,
-    ) -> Dict[str, Any]:
-        """Executes a list of (task_id, callable) tuples concurrently.
-
-        Returns aggregated results with execution metrics and speedup estimation.
-        """
-        overall_start = time.time()
-        timeout = timeout_s if timeout_s is not None else self.default_timeout_s
-        results: Dict[str, TaskExecutionResult] = {}
-        individual_durations = 0.0
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            future_to_id: Dict[concurrent.futures.Future, str] = {}
-            task_start_times: Dict[str, float] = {}
-
-            for task_id, fn in tasks:
-                task_start_times[task_id] = time.time()
-                future = executor.submit(fn)
-                future_to_id[future] = task_id
-
-            done, not_done = concurrent.futures.wait(
-                future_to_id.keys(),
-                timeout=timeout,
-                return_when=concurrent.futures.ALL_COMPLETED,
-            )
-
-            for future in done:
-                task_id = future_to_id[future]
-                elapsed = round((time.time() - task_start_times[task_id]) * 1000, 2)
-                individual_durations += elapsed
-                try:
-                    res = future.result()
-                    results[task_id] = TaskExecutionResult(
-                        task_id=task_id,
-                        status="completed",
-                        result=res,
-                        duration_ms=elapsed,
-                    )
-                except Exception as e:
-                    results[task_id] = TaskExecutionResult(
-                        task_id=task_id,
-                        status="error",
-                        error=str(e),
-                        duration_ms=elapsed,
-                    )
-
-            for future in not_done:
-                task_id = future_to_id[future]
-                future.cancel()
-                elapsed = round((time.time() - task_start_times[task_id]) * 1000, 2)
-                individual_durations += elapsed
-                results[task_id] = TaskExecutionResult(
-                    task_id=task_id,
-                    status="timeout",
-                    error=f"Exceeded timeout of {timeout}s",
-                    duration_ms=elapsed,
-                )
-
-        wall_time_ms = round((time.time() - overall_start) * 1000, 2)
-        speedup = round(individual_durations / max(wall_time_ms, 0.001), 2) if len(tasks) > 1 else 1.0
-
-        return {
-            "total_tasks": len(tasks),
-            "completed": sum(1 for r in results.values() if r.status == "completed"),
-            "failed": sum(1 for r in results.values() if r.status in ("error", "timeout")),
-            "wall_clock_ms": wall_time_ms,
-            "sequential_estimate_ms": round(individual_durations, 2),
-            "speedup_factor": speedup,
-            "results": {k: v.to_dict() for k, v in results.items()},
-        }
+    def execute_batch(self, tasks, timeout_s=None, cancelled=None):
+        timeout = self.default_timeout_s if timeout_s is None else timeout_s
+        if not 0 < timeout <= 3600 or len(tasks) > 256:
+            raise ValueError('Invalid bounded batch or deadline')
+        if len({k for k, _ in tasks}) != len(tasks):
+            raise ValueError('Task IDs must be unique')
+        pending = []
+        for name, fn in tasks:
+            if not isinstance(name, str) or not callable(fn): raise ValueError('Expected named callables')
+            payload = cloudpickle.dumps(fn)
+            if len(payload) > 1024 * 1024: raise ValueError('Callable exceeds 1 MiB')
+            pending.append((name, payload))
+        context = multiprocessing.get_context('spawn')
+        start = time.monotonic(); deadline = start + timeout
+        active = {}; results = {}
+        try:
+            while pending or active:
+                stopped = cancelled is not None and cancelled.is_set()
+                expired = time.monotonic() >= deadline
+                if stopped or expired:
+                    status = 'cancelled' if stopped else 'timeout'
+                    for name, _ in pending:
+                        results[name] = TaskExecutionResult(name, status).to_dict()
+                    pending.clear()
+                    for name, (proc, pipe) in list(active.items()):
+                        stop_worker(proc); pipe.close(); del active[name]
+                        results[name] = TaskExecutionResult(name, status).to_dict()
+                    break
+                while pending and len(active) < self.max_workers:
+                    name, payload = pending.pop(0)
+                    receive, send = context.Pipe(duplex=False)
+                    proc = context.Process(target=_worker, args=(payload, send))
+                    proc.start(); send.close()
+                    active[name] = (proc, receive)
+                for name, (proc, pipe) in list(active.items()):
+                    if pipe.poll() or not proc.is_alive():
+                        try:
+                            value = cloudpickle.loads(pipe.recv_bytes(1024 * 1024))
+                        except (EOFError, OSError):
+                            value = {'status': 'error', 'error': 'Worker exited without a result'}
+                        results[name] = {'task_id': name, **value}
+                        stop_worker(proc); pipe.close(); del active[name]
+                if active: time.sleep(.005)
+        finally:
+            for proc, pipe in active.values():
+                stop_worker(proc); pipe.close()
+        wall = (time.monotonic() - start) * 1000
+        total = sum(v.get('duration_ms', 0) for v in results.values())
+        return {'total_tasks': len(tasks), 'completed': sum(v['status'] == 'completed' for v in results.values()),
+                'failed': sum(v['status'] != 'completed' for v in results.values()),
+                'wall_clock_ms': round(wall, 2), 'sequential_estimate_ms': round(total, 2),
+                'speedup_factor': round(total / max(wall, .001), 2), 'results': results}

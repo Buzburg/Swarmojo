@@ -139,16 +139,14 @@ def test_sovereign_desktop_bridge_and_batching():
     assert len(bridge.history) == 3
 
 
-def test_sovereign_dedup_cache():
-    cache = DeduplicatedExecutionCache(default_ttl_seconds=10.0)
+def test_sovereign_dedup_cache(tmp_path):
+    cache = DeduplicatedExecutionCache(default_ttl_seconds=10.0, workspace_root=tmp_path)
     cmd = f'"{sys.executable}" -c "print(998877)"'
-    res1 = cache.get_or_run(cmd)
-    assert res1["from_cache"] is False
-    assert "998877" in res1["stdout"]
-
-    res2 = cache.get_or_run(cmd)
-    assert res2["from_cache"] is True
-    assert res2["hits"] == 1
+    first = cache.get_or_run(cmd)
+    assert first['approval_required'] and first['status'] == 'pending'
+    repeated = DeduplicatedExecutionCache(workspace_root=tmp_path).get_or_run(cmd)
+    assert repeated['request_id'] == first['request_id']
+    assert repeated['stdout'] == ''  # No implicit execution before operator approval.
 
 
 def test_sovereign_omnipresent_dispatcher():
@@ -172,32 +170,16 @@ def test_sovereign_terminal_press():
 
 
 def test_parallel_tool_dispatcher():
-    dispatcher = ParallelToolDispatcher(max_workers=4)
-
-    def task_1():
-        time.sleep(0.05)
-        return "result_1"
-
-    def task_2():
-        time.sleep(0.05)
-        return "result_2"
-
-    def task_3():
-        time.sleep(0.05)
-        return "result_3"
-
-    report = dispatcher.execute_batch([
-        ("t1", task_1),
-        ("t2", task_2),
-        ("t3", task_3),
-    ])
-
-    assert report["total_tasks"] == 3
-    assert report["completed"] == 3
-    assert report["failed"] == 0
-    # Sequential would take ~150ms; parallel should take significantly less
-    assert report["speedup_factor"] >= 1.2
-    assert report["results"]["t1"]["result"] == "result_1"
+    dispatcher = ParallelToolDispatcher(max_workers=3)
+    def task():
+        start = time.monotonic()
+        time.sleep(.5)
+        return (start, time.monotonic())
+    report = dispatcher.execute_batch([(name, task) for name in ('t1','t2','t3')])
+    assert report['completed'] == 3 and report['failed'] == 0
+    intervals = [r['result'] for r in report['results'].values()]
+    assert max(start for start, end in intervals) < min(end for start, end in intervals)
+    assert report['speedup_factor'] == round(report['sequential_estimate_ms'] / report['wall_clock_ms'], 2)
 
 
 def test_fast_search_engine():

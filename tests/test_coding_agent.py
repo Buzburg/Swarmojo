@@ -106,6 +106,7 @@ def test_pi_toolkit_atomic_write(tmp_path: Path):
 def test_prime_single_delegation(tmp_path: Path):
     engine = PrimeRecursionEngine(workspace_root=str(tmp_path))
     res = engine.execute_delegation(
+        model_profile="mock",
         mode="single",
         parent_goal="Review code safety",
         agent="code_reviewer",
@@ -124,6 +125,7 @@ def test_prime_parallel_delegation(tmp_path: Path):
         {"agent": "code_reviewer", "task": "Review system design architecture"},
     ]
     res = engine.execute_delegation(
+        model_profile="mock",
         mode="parallel",
         parent_goal="Draft and review system design architecture",
         tasks=tasks,
@@ -140,6 +142,7 @@ def test_prime_chain_piping(tmp_path: Path):
         {"agent": "code_reviewer", "task": "Review following spec: {previous}"},
     ]
     res = engine.execute_delegation(
+        model_profile="mock",
         mode="chain",
         parent_goal="Specification and review pipeline",
         chain=chain,
