@@ -68,6 +68,8 @@ def test_request_cannot_be_overridden_by_inline_fields(tmp_path: Path) -> None:
 def test_mcp_transport_uses_configured_roots(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from fastmcp import Client
     from app import server
+    # This contract exercises operator-enabled model/provider calls.
+    monkeypatch.setattr(server.mcp.middleware[0], "profile", "local")
 
     monkeypatch.setattr(server, "DB_PATH", tmp_path / "missing.db")
     monkeypatch.setattr(server, "SKILLS_DIR", tmp_path / "skills")

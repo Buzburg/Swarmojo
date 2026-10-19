@@ -201,10 +201,12 @@ def test_meta_harness_multi_agent_execution(tmp_path: Path):
     assert len(report_pipe["turns"]) == 3
 
 
-def test_server_fastmcp_meta_tools():
+def test_server_fastmcp_meta_tools(monkeypatch):
     import asyncio
     from fastmcp import Client
     from app import server
+    # This contract exercises operator-enabled model/provider calls.
+    monkeypatch.setattr(server.mcp.middleware[0], "profile", "local")
 
     async def run():
         async with Client(server.mcp) as client:

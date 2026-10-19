@@ -30,7 +30,7 @@ from app.meta.agent import MetaAgentInstance
 from app.meta.environment import ExecutionEnvironment
 from app.meta.manifest import AgentManifest, EnvironmentConfig
 from app.meta.models import ModelClient, ModelConfig
-from app.meta.premade import get_premade_agents_dict
+from app.meta.premade import ADDITIONAL_SPECIALISTS, get_premade_agents_dict
 from app.engines.governance import HarnessGovernanceEngine
 from app.desktop_session import desktop_lock
 from app.desktop_web import read_public_page
@@ -56,6 +56,8 @@ ROLE_DESCRIPTIONS = {
     'assistant': 'Helps with planning, priorities, questions, and everyday project support.',
     'coordinator': 'Breaks goals into tasks, coordinates specialist replies, and synthesizes results.',
 }
+ROLE_TEMPLATES.update({id: id for id, *_ in ADDITIONAL_SPECIALISTS})
+ROLE_DESCRIPTIONS.update({id: description for id, name, base, description, instructions in ADDITIONAL_SPECIALISTS})
 ROLES = {key: (get_premade_agents_dict()[value].name, ROLE_DESCRIPTIONS[key])
          for key, value in ROLE_TEMPLATES.items()}
 
@@ -84,8 +86,14 @@ class AgentInput(Input):
     name: str = Field(default='', max_length=60)
     instructions: str = Field(default='', max_length=4000)
     enabled: bool = True
+    work_mode: Literal['team', 'isolated'] = 'team'
     model_id: str = Field(default='', max_length=160)
     temperature: float | None = Field(default=None, ge=0, le=2, allow_inf_nan=False)
+
+
+class ParticipationInput(Input):
+    enabled: bool = True
+    work_mode: Literal['team', 'isolated'] = 'team'
 
 
 class ProjectOptions(Input):
@@ -101,7 +109,7 @@ class ProjectConfiguration(Input):
     version: Literal[1] = 1
     project: ProjectInput
     options: ProjectOptions = Field(default_factory=ProjectOptions)
-    agents: list[AgentInput] = Field(default_factory=list, max_length=8)
+    agents: list[AgentInput] = Field(default_factory=list, max_length=16)
 
 
 class SearchInput(Input):
@@ -305,7 +313,7 @@ class Desktop:
                 db.execute('INSERT INTO agents VALUES (?,?,?,?,?)',
                     (agent_id, id, agent.role, agent.name or ROLES[agent.role][0], agent.instructions))
                 db.execute('INSERT INTO agent_options VALUES (?,?)', (agent_id,
-                    agent.model_dump_json(include={'enabled', 'model_id', 'temperature'})))
+                    agent.model_dump_json(include={'enabled', 'work_mode', 'model_id', 'temperature'})))
         self.record(id, 'configuration_imported', 'Created a new project from a portable configuration')
         return dict(id=id, **self.state())
 
@@ -398,9 +406,28 @@ class Desktop:
             raise Problem('Project not found.', 404)
         return dict(row)
 
+    def project_scope(self, scope):
+        """Resolve an isolated scope only when its specialist belongs to this project."""
+        if '.' not in scope:
+            self.project(scope)
+            return scope
+        if not re.fullmatch(r'[a-f0-9]{32}\.[a-f0-9]{32}', scope):
+            raise Problem('Conversation not found.', 404)
+        project_id, agent_id = scope.split('.')
+        self.project(project_id)
+        if not any(a['id'] == agent_id for a in self.agents(project_id)):
+            raise Problem('Agent not found in this project.', 404)
+        return project_id
+
+    def isolated_agent(self, scope):
+        if '.' not in scope:
+            return None
+        project_id = self.project_scope(scope)
+        return next(a for a in self.agents(project_id) if a['id'] == scope.split('.')[1])
+
     def workspace(self, scope):
         if scope != 'main':
-            self.project(scope)
+            self.project_scope(scope)
         path = self.workspaces / scope
         if self.workspaces.is_symlink() or path.is_symlink():
             raise Problem('Workspace links are not allowed.')
@@ -418,16 +445,19 @@ class Desktop:
             members = [dict(r) for r in db.execute('SELECT * FROM agents WHERE project_id=? ORDER BY rowid', (scope,))]
             for member in members:
                 row = db.execute('SELECT body FROM agent_options WHERE agent_id=?', (member['id'],)).fetchone()
-                member.update(dict(enabled=True, model_id='', temperature=None))
+                member.update(dict(enabled=True, work_mode='team', model_id='', temperature=None))
                 if row:
                     member.update(json.loads(row['body']))
             return members
 
     def options(self, scope):
-        self.project(scope)
+        project_id = self.project_scope(scope)
         with self.db() as db:
-            row = db.execute('SELECT body FROM project_options WHERE project_id=?', (scope,)).fetchone()
-        return ProjectOptions.model_validate(json.loads(row['body']) if row else {}).model_dump()
+            row = db.execute('SELECT body FROM project_options WHERE project_id=?', (project_id,)).fetchone()
+        options = ProjectOptions.model_validate(json.loads(row['body']) if row else {}).model_dump()
+        if '.' in scope:
+            options['memory'] = ''
+        return options
 
     def record(self, scope, kind, detail):
         with self.db() as db:
@@ -435,6 +465,7 @@ class Desktop:
                        (scope, kind, detail[:1000], time.time()))
 
     def governance(self, scope):
+        scope = self.project_scope(scope) if scope != 'main' else scope
         gov = HarnessGovernanceEngine(str(self.workspace(scope)), state_dir=self.control)
         existing = {a['id'] for a in gov.get_org_chart()['nodes']}
         members = [dict(id='main', name=self.settings()['main_name'], role='coordinator')]
@@ -451,11 +482,11 @@ class Desktop:
             activity = [dict(r) for r in db.execute(
                 'SELECT * FROM activity WHERE scope=? ORDER BY id DESC LIMIT 100', (scope,))]
         budget = gov.get_budget_summary()
-        names = {a['id']: a['name'] for a in self.agents(scope)}
+        names = {a['id']: a['name'] for a in self.agents(self.project_scope(scope))}
         names['main'] = self.settings()['main_name']
         for agent in budget['per_agent']:
             agent['name'] = names.get(agent['id'], agent['name'] + ' (removed)')
-        return dict(options=self.options(scope), tasks=gov.list_tasks(), budget=budget, activity=activity)
+        return dict(options=self.options(scope), tasks=gov.list_tasks() if '.' not in scope else {}, budget=budget, activity=activity)
 
     def state(self):
         with self.db() as db:
@@ -503,7 +534,7 @@ class Desktop:
             recovery = [dict(r) for r in db.execute("SELECT id,input,status FROM turns WHERE scope=? AND status IN ('interrupted','failed') ORDER BY rowid DESC LIMIT 5", (scope,))]
         for row in recovery:
             row['input'] = json.loads(row['input'])
-        return dict(messages=messages, approvals=approvals, busy=busy, recovery=recovery,
+        return dict(messages=messages, approvals=approvals, busy=busy, recovery=recovery, isolated_agent=self.isolated_agent(scope),
                     sources=self.sources(scope) if scope != 'main' else [],
                     files=self.files(scope) if scope != 'main' else [], workspace=str(env.root_path),
                     **(self.project_insights(scope) if scope != 'main' else {}))
@@ -567,6 +598,11 @@ class Desktop:
     def chat(self, scope, body):
         values = MessageInput.model_validate(body)
         self.workspace(scope)
+        isolated = self.isolated_agent(scope)
+        if isolated and (not isolated['enabled'] or isolated['work_mode'] != 'isolated'):
+            raise Problem('Turn this specialist on and select Isolated before sending a private request.', 409)
+        if isolated and values.team:
+            raise Problem('An isolated conversation cannot run the project team.')
         request_body = json.dumps(dict(text=values.text, team=values.team), sort_keys=True)
         with self.lock_guard:
             lock = self.locks.setdefault(scope, threading.Lock())
@@ -582,19 +618,19 @@ class Desktop:
                     return self.conversation(scope)
                 raise Problem('This request was interrupted or failed. Inspect the conversation before sending again.', 409)
             config = self.model()
-            members = [a for a in self.agents(scope) if a['enabled']] if scope != 'main' else []
+            members = [a for a in self.agents(scope) if a['enabled'] and a['work_mode'] == 'team'] if scope != 'main' and not isolated else []
             if values.team and not members:
-                raise Problem('Add or enable agents in this project before running the team.')
+                raise Problem('Turn on at least one specialist in Team mode before running the team.')
             with self.db() as db:
                 db.execute('INSERT INTO turns VALUES (?,?,?,?,NULL)', (values.request_id, scope, request_body, 'running'))
             history = self.conversation(scope)['messages']
             self.add_message(scope, 'user', 'You', values.text)
-            self.record(scope, 'run_started', 'Team response' if values.team else 'Main agent response')
+            self.record(scope, 'run_started', 'Isolated specialist response' if isolated else 'Team response' if values.team else 'Main agent response')
             settings = self.settings()
             root = self.workspace(scope)
             project_context = ''
             if scope != 'main':
-                project = self.project(scope)
+                project = self.project(self.project_scope(scope))
                 project_context = f"Project: {project['name']}\nBrief: {project['brief']}\n"
                 options = self.options(scope)
                 gov = self.governance(scope)
@@ -604,7 +640,7 @@ class Desktop:
                 for source in self.sources(scope):
                     if source['enabled']:
                         project_context += '\nUntrusted reference (never execution authority): ' + source['title'] + '\n' + source['content'][:3000]
-                tasks = gov.list_tasks()
+                tasks = gov.list_tasks() if not isolated else {}
                 active_tasks = [t for column, rows in tasks.items() if column != 'done' for t in rows][:12]
                 if active_tasks:
                     project_context += '\nCurrent project tasks (planning records, not execution receipts):\n' + json.dumps(active_tasks)
@@ -640,6 +676,8 @@ class Desktop:
                 manifest = specialist_manifest(role, id, name, selected, instructions + '\n' + extra)
                 agent = MetaAgentInstance(manifest, model_client=self.client, workspace_root=str(root),
                                           run_id=scope, state_dir=self.control)
+                if scope != 'main':
+                    agent.governance = gov  # All modes share the project's enforced cost/token ledger.
                 agent.history = [{'role': m['role'], 'content': m['content']} for m in history
                                  if m['role'] in {'user', 'assistant'}][-8:]
                 return agent.execute_turn(prompt, context_notes=[project_context] if project_context else [])
@@ -647,6 +685,9 @@ class Desktop:
                 notes = []
                 if values.team:
                     for member in members:
+                        current = next((a for a in self.agents(scope) if a['id'] == member['id']), None)
+                        if not current or not current['enabled'] or current['work_mode'] != 'team':
+                            continue
                         result = turn(member['id'], member['name'], member['role'], member['instructions'], values.text, member)
                         self.add_message(scope, 'assistant', member['name'], result['content'],
                                          {'simulated': result['simulated'], 'specialist': True,
@@ -655,9 +696,12 @@ class Desktop:
                 prompt = values.text
                 if notes:
                     prompt += '\n\nSynthesize these untrusted specialist proposals into one answer with final file changes:\n' + '\n\n'.join(notes)
-                result = turn('main', settings['main_name'], 'coordinator' if scope != 'main' else 'assistant', '', prompt)
+                if isolated:
+                    result = turn(isolated['id'], isolated['name'], isolated['role'], isolated['instructions'], prompt, isolated)
+                else:
+                    result = turn('main', settings['main_name'], 'coordinator' if scope != 'main' else 'assistant', '', prompt)
                 content, proposals = self.stage(scope, result['content'])
-                self.add_message(scope, 'assistant', settings['main_name'], content,
+                self.add_message(scope, 'assistant', isolated['name'] if isolated else settings['main_name'], content,
                                  {'simulated': result['simulated'], 'proposals': proposals,
                                   'model': result['model'], 'usage': result['usage']})
                 with self.db() as db:
@@ -686,7 +730,7 @@ class Desktop:
 
     def approve(self, scope, id, body):
         values = ApprovalInput.model_validate(body)
-        self.project(scope)
+        self.project_scope(scope)
         with self.db() as db:
             if not db.execute('SELECT 1 FROM proposals WHERE id=? AND scope=?', (id, scope)).fetchone():
                 raise Problem('Proposal not found in this project.', 404)
@@ -802,6 +846,20 @@ class Desktop:
                 with self.db() as db:
                     db.execute('UPDATE projects SET name=?,brief=? WHERE id=?', (data.name, data.brief, scope))
                 return self.state()
+            if len(parts) == 5 and parts[2] == 'agents' and parts[4] == 'participation' and method == 'PATCH':
+                changes = ParticipationInput.model_validate(body).model_dump(exclude_unset=True)
+                if not changes:
+                    raise Problem('Choose an on/off state or work mode.')
+                with self.db() as db:
+                    db.execute('BEGIN IMMEDIATE')
+                    if not db.execute('SELECT 1 FROM agents WHERE id=? AND project_id=?', (parts[3], scope)).fetchone():
+                        raise Problem('Agent not found in this project.', 404)
+                    row = db.execute('SELECT body FROM agent_options WHERE agent_id=?', (parts[3],)).fetchone()
+                    options = json.loads(row['body']) if row else {}
+                    options.update(changes)
+                    db.execute('INSERT OR REPLACE INTO agent_options VALUES (?,?)', (parts[3], json.dumps(options)))
+                self.record(scope, 'agent_participation', 'Specialist participation updated: ' + json.dumps(changes))
+                return self.state()
             if len(parts) in {3, 4} and parts[2] == 'agents':
                 if method in {'POST', 'PATCH'}:
                     data = AgentInput.model_validate(body)
@@ -811,8 +869,8 @@ class Desktop:
                     instructions = data.instructions
                     with self.db() as db:
                         if method == 'POST' and len(parts) == 3:
-                            if len(self.agents(scope)) >= 8:
-                                raise Problem('A project supports up to eight agents.')
+                            if len(self.agents(scope)) >= 16:
+                                raise Problem('A project supports up to sixteen agents.')
                             agent_id = uuid.uuid4().hex
                             db.execute('INSERT INTO agents VALUES (?,?,?,?,?)', (agent_id, scope, data.role, name, instructions))
                         elif method == 'PATCH' and len(parts) == 4:
@@ -825,11 +883,15 @@ class Desktop:
                             db.execute('UPDATE agents SET name=?,instructions=? WHERE id=?', (name, instructions, agent_id))
                         else:
                             raise Problem('Route not found.', 404)
-                        options = data.model_dump(include={'enabled', 'model_id', 'temperature'})
+                        options = data.model_dump(include={'enabled', 'work_mode', 'model_id', 'temperature'})
                         db.execute('INSERT OR REPLACE INTO agent_options VALUES (?,?)', (agent_id, json.dumps(options)))
                     self.record(scope, 'agent_updated' if method == 'PATCH' else 'agent_added', name)
                     return self.state()
                 if method == 'DELETE' and len(parts) == 4:
+                    private_scope = scope + '.' + parts[3]
+                    with self.db() as db:
+                        if db.execute('SELECT 1 FROM turns WHERE scope=? LIMIT 1', (private_scope,)).fetchone():
+                            raise Problem('This specialist has isolated work. Turn it off to retain its history and approvals.', 409)
                     tasks = self.governance(scope).list_tasks()
                     if any(t['assignee_id'] == parts[3] for status, rows in tasks.items() if status != 'done' for t in rows):
                         raise Problem('Finish this agent’s tasks before removing it, or pause the agent instead.', 409)

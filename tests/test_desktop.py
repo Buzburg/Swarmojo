@@ -415,3 +415,171 @@ def test_context_preparation_failure_does_not_stick_running(desktop,monkeypatch)
     with service.db() as db:
         assert db.execute('SELECT status FROM turns').fetchone()['status']=='failed'
     assert calls==[]
+
+
+def add_specialist(client, project_id, **options):
+    r = client.post(f'/api/projects/{project_id}/agents', json={'role':'coder', **options})
+    assert r.status_code == 200, r.text
+    return next(p for p in r.json()['projects'] if p['id']==project_id)['agents'][-1]
+
+
+def participation(client, project_id, agent_id, **changes):
+    return client.patch(f'/api/projects/{project_id}/agents/{agent_id}/participation', json=changes)
+
+
+def test_participation_defaults_toggle_and_template_roundtrip(desktop):
+    client, service, _ = desktop
+    p = project(client)
+    a = add_specialist(client,p,instructions='Keep contracts',model_id='override',temperature=0.7)
+    assert a['enabled'] and a['work_mode']=='team'
+    assert participation(client,p,a['id'],enabled=False).status_code==200
+    assert participation(client,p,a['id'],work_mode='isolated').status_code==200
+    current = service.agents(p)[0]
+    assert not current['enabled'] and current['work_mode']=='isolated'
+    assert current['instructions']=='Keep contracts' and current['model_id']=='override' and current['temperature']==0.7
+    template=client.get(f'/api/projects/{p}/configuration').json()
+    imported=client.post('/api/configurations/import',json=template).json()['id']
+    assert service.agents(imported)[0]['work_mode']=='isolated'
+    assert service.agents(imported)[0]['enabled'] is False
+    reopened=create_app(service.directory).state.desktop
+    assert reopened.agents(p)[0]==current
+    # Existing installations have no work_mode key in their saved options.
+    with service.db() as db:
+        db.execute('UPDATE agent_options SET body=? WHERE agent_id=?',(json.dumps({'enabled':True}),a['id']))
+    assert service.agents(p)[0]['work_mode']=='team'
+
+
+def test_team_only_calls_enabled_team_specialists(desktop):
+    client, service, calls=desktop;configure(client);p=project(client)
+    add_specialist(client,p,name='Together',instructions='TEAM_INSTRUCTION')
+    add_specialist(client,p,name='Alone',instructions='ISOLATED_INSTRUCTION',work_mode='isolated')
+    add_specialist(client,p,name='Off',instructions='OFF_INSTRUCTION',enabled=False)
+    response=chat(client,p,team=True)
+    assert response.status_code==200,response.text
+    assert len(calls)==2
+    assert 'TEAM_INSTRUCTION' in json.dumps(calls[0])
+    assert 'ISOLATED_INSTRUCTION' not in json.dumps(calls)
+    assert 'OFF_INSTRUCTION' not in json.dumps(calls)
+    assert [m['name'] for m in response.json()['messages'] if m['role']=='assistant']==['Together','Main agent']
+
+
+def test_isolated_context_files_approvals_and_search_are_separate(desktop):
+    client, service, calls=desktop;configure(client);p=project(client)
+    a=add_specialist(client,p,name='Solo',work_mode='isolated')
+    b=add_specialist(client,p,name='Other',work_mode='isolated')
+    private=p+'.'+a['id'];other=p+'.'+b['id']
+    service.add_message(p,'user','You','TEAM_HISTORY_SENTINEL')
+    service.add_message(other,'user','You','OTHER_HISTORY_SENTINEL')
+    client.put(f'/api/projects/{p}/options',json={'memory':'TEAM_NOTES_SENTINEL'})
+    (service.workspace(p)/'shared.txt').write_text('TEAM_FILE_SENTINEL')
+    service.save_source(p,'web','Shared source','TEAM_SOURCE_SENTINEL',{},enabled=True)
+    response=chat(client,private,'SOLO_HISTORY_SENTINEL')
+    assert response.status_code==200,response.text
+    assert len(calls)==1 and 'Solo' in calls[0][0]['content']
+    for marker in ['TEAM_HISTORY_SENTINEL','OTHER_HISTORY_SENTINEL','TEAM_NOTES_SENTINEL','TEAM_FILE_SENTINEL','TEAM_SOURCE_SENTINEL']:
+        assert marker not in json.dumps(calls)
+    assert 'Build a tiny greeting script.' in json.dumps(calls)
+    proposal=response.json()['approvals'][0]
+    body={'fingerprint':proposal['fingerprint'],'decision':'approve'}
+    assert client.post(f'/api/conversations/{p}/approvals/{proposal["request_id"]}',json=body).status_code==404
+    assert client.post(f'/api/conversations/{private}/approvals/{proposal["request_id"]}',json=body).status_code==200
+    assert (service.workspace(private)/'hello.py').exists()
+    assert not (service.workspace(p)/'hello.py').exists()
+    assert not (service.workspace(other)/'hello.py').exists()
+    assert client.post(f'/api/conversations/{p}/search',json={'query':'SOLO_HISTORY_SENTINEL'}).json()['results']==[]
+    assert client.post(f'/api/conversations/{private}/search',json={'query':'SOLO_HISTORY_SENTINEL'}).json()['results']
+    # Returning to team participation never copies private conversation or files.
+    assert participation(client,p,a['id'],work_mode='team').status_code==200
+    calls.clear();assert chat(client,p,team=True).status_code==200
+    assert 'SOLO_HISTORY_SENTINEL' not in json.dumps(calls)
+    assert 'hello.py' not in service.files(p)
+    assert client.get(f'/api/conversations/{private}').json()['messages']
+
+
+def test_disabled_or_team_specialist_cannot_run_isolated(desktop):
+    client, service, calls=desktop;configure(client);p=project(client)
+    a=add_specialist(client,p);private=p+'.'+a['id']
+    assert chat(client,private).status_code==409
+    participation(client,p,a['id'],work_mode='isolated',enabled=False)
+    assert chat(client,private).status_code==409
+    participation(client,p,a['id'],enabled=True)
+    assert chat(client,private,team=True).status_code==400
+    assert not calls
+    assert chat(client,p,team=True).status_code==400
+    assert participation(client,p,a['id'],work_mode='unknown').status_code==422
+
+
+def test_isolated_permissions_and_project_budget_remain_enforced(desktop):
+    client, service, calls=desktop;configure(client);p=project(client)
+    a=add_specialist(client,p,work_mode='isolated');private=p+'.'+a['id']
+    client.put('/api/settings',json={**service.settings(),'max_call_cost_usd':0.03})
+    client.put(f'/api/projects/{p}/options',json={'budget_usd':0.05})
+    response=chat(client,private)
+    assert response.status_code==200,response.text
+    assert chat(client,p).status_code==502
+    assert len(calls)==1
+    assert service.governance(p).get_budget_summary()['total_spend_usd']==pytest.approx(0.03)
+    proposal=response.json()['approvals'][0]
+    client.put(f'/api/projects/{p}/options',json={'action_mode':'discuss'})
+    blocked=client.post(f'/api/conversations/{private}/approvals/{proposal["request_id"]}',json={'fingerprint':proposal['fingerprint'],'decision':'approve'})
+    assert blocked.status_code==403
+    assert not (service.workspace(private)/'hello.py').exists()
+
+
+def test_participation_and_isolated_scopes_require_project_membership(desktop):
+    client, service, calls=desktop;p=project(client);other=project(client,'Other')
+    a=add_specialist(client,p,work_mode='isolated')
+    invalid=other+'.'+a['id']
+    assert client.get('/api/conversations/'+invalid).status_code==404
+    assert participation(client,other,a['id'],enabled=False).status_code==404
+    assert service.agents(p)[0]['enabled']
+    assert not (service.workspaces/invalid).exists()
+
+
+def test_turning_off_queued_team_member_skips_its_provider_call(desktop):
+    client, service, calls=desktop;configure(client);p=project(client)
+    first=add_specialist(client,p,name='First');second=add_specialist(client,p,name='Second')
+    original=service.client.generate
+    def generate(*args,**kwargs):
+        if not calls:
+            service.dispatch('PATCH',f'projects/{p}/agents/{second["id"]}/participation',{'enabled':False})
+        return original(*args,**kwargs)
+    service.client.generate=generate
+    response=chat(client,p,team=True)
+    assert response.status_code==200,response.text
+    assert len(calls)==2
+    assert [m['name'] for m in response.json()['messages'] if m['role']=='assistant']==['First','Main agent']
+
+
+def test_isolated_history_survives_off_mode_changes_and_restart(desktop):
+    client, service, calls=desktop;configure(client);p=project(client)
+    a=add_specialist(client,p,work_mode='isolated');private=p+'.'+a['id']
+    assert chat(client,private,'Keep this private work').status_code==200
+    participation(client,p,a['id'],enabled=False,work_mode='team')
+    assert client.request('DELETE',f'/api/projects/{p}/agents/{a["id"]}',json={}).status_code==409
+    reopened=create_app(service.directory).state.desktop
+    assert not reopened.agents(p)[0]['enabled']
+    assert reopened.agents(p)[0]['work_mode']=='team'
+    private_data=reopened.conversation(private)
+    assert private_data['messages'][0]['content']=='Keep this private work'
+    assert private_data['approvals'][0]['status']=='pending'
+    assert reopened.conversation(p)['messages']==[]
+
+
+def test_requested_specialists_are_selectable_and_portable(desktop):
+    client,service,_=desktop
+    names=['Assistant','Coder','Writer','Designer','Forecaster','Researcher','Director','Marketer',
+           'Mathematician','Renigineer','Accountant','Trader','Lawyer','Adjuster']
+    roles={r['name']:r['id'] for r in client.get('/api/state').json()['roles']}
+    assert set(names)<=roles.keys()
+    p=project(client)
+    for name in names:
+        result=client.post(f'/api/projects/{p}/agents',json={'role':roles[name],'name':name+' custom','work_mode':'isolated','enabled':False})
+        assert result.status_code==200,result.text
+    assert len(service.agents(p))==14
+    template=client.get(f'/api/projects/{p}/configuration').json()
+    imported=client.post('/api/configurations/import',json=template)
+    assert imported.status_code==200,imported.text
+    restored=service.agents(imported.json()['id'])
+    assert [a['name'] for a in restored]==[name+' custom' for name in names]
+    assert all(not a['enabled'] and a['work_mode']=='isolated' for a in restored)

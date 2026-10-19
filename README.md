@@ -15,7 +15,7 @@ Turn an idea into a project, bring in the specialists you need, and build with a
 ## Make room for your next idea
 
 - **Start with a project.** Give it a brief, its own workspace, and a team assembled for that job. Your sidebar keeps projects within reach.
-- **Choose your specialists.** Add a Coder, Designer, Studio, Writer, Researcher, Reviewer, or another role. Rename them, give them project guidance, pause them, and choose per-agent model settings. Their specialist prompts, skills, tools, and memory policies stay intact.
+- **Choose your specialists.** Choose from 21 roles, including Assistant, Coder, Writer, Designer, Forecaster, Researcher, Director, Marketer, Mathematician, Renigineer, Accountant, Trader, Lawyer, and Adjuster. Rename them, give them project guidance, pause them, and choose per-agent model settings. Their specialist prompts, skills, tools, and memory policies stay intact.
 - **Think with your Main agent.** Use a separate everyday conversation for questions, planning, and ideas that don’t belong to one project.
 - **Keep useful context close.** Save project notes, search conversations and references, read public web pages, and select excerpts from your existing ROMS knowledge index.
 - **Stay in control of changes.** Inspect exact file contents and commands before approving them. Set action permissions, context exclusions, and project budgets. Review receipts and activity as work progresses.
@@ -55,7 +55,7 @@ Open **http://127.0.0.1:8765**. The installed `swarmojo-desktop` command launche
 
 1. Open **Settings** in the top bar and enter your model ID and OpenAI-compatible endpoint. Local HTTP endpoints and remote HTTPS endpoints are supported. No model is preselected.
 2. Create a project from the left sidebar. Add a brief and the specialists you want to use.
-3. Send a message to the Main agent, or select **Use team** to collect specialist responses and a coordinated answer.
+3. Use each specialist’s **On/Off** switch and choose **Team** or **Isolated**. Select **Work with → Team** for coordinated replies, or open a specialist’s isolated workspace to work with it separately.
 4. When changes are proposed, open **Approvals**, review the exact action, and choose whether to apply it.
 
 **Try the interface first:** the [live preview](https://buzburg.github.io/Swarmojo/) needs no installation. It shows the design; saving projects, connecting models, and running agents require your local server.
@@ -64,7 +64,7 @@ Open **http://127.0.0.1:8765**. The installed `swarmojo-desktop` command launche
 
 | Section | What you can do |
 | --- | --- |
-| Conversation | Talk with the project coordinator or request a team response |
+| Conversation | Talk with Main, run your active team, or work with an isolated specialist |
 | Tasks | Assign owners, set priorities and dependencies, and track your assessment of progress |
 | Memory | Curate notes, search project history, and explicitly select ROMS knowledge excerpts |
 | Web | Read public HTML or text pages and choose saved references for model context |
@@ -98,7 +98,7 @@ See the [desktop guide](docs/desktop-features.md) for context limits, portable t
 
 ## Build on the harness
 
-Swarmojo also ships Python, CLI, and MCP interfaces for agent workflows. The desktop uses the existing specialist runtime, governance ledger, and approval store.
+Swarmojo also ships Python, CLI, and MCP interfaces for agent workflows. The desktop uses the existing specialist runtime, governance ledger, and approval store. MCP starts with a read-only tool profile, bounded requests, and custom plugins disabled. See [MCP access controls](docs/mcp-security.md) to enable the capabilities you need.
 
 ```sh
 python swarmmojo.py --help

@@ -126,7 +126,7 @@ def test_mcp_startup_keeps_stdout_clean(monkeypatch: pytest.MonkeyPatch, capsys:
     monkeypatch.setattr(server, 'ingest_okf_directory', lambda path: 0)
     monkeypatch.setattr(server, 'load_custom_tools', lambda: None)
     monkeypatch.setattr(server, 'start_watcher', lambda mcp: None)
-    monkeypatch.setattr(server.mcp, 'run', lambda: None)
+    monkeypatch.setattr(server.mcp, 'run', lambda **kwargs: None)
     server.start_server()
     output = capsys.readouterr()
     assert output.out == ''

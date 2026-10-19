@@ -217,7 +217,7 @@ def test_mcp_mutations_are_reviewable_and_workspace_is_fixed(runtime, monkeypatc
     from app.meta.meta_tools import register_meta_tools
     class Server:
         def __init__(self): self.tools = {}
-        def tool(self):
+        def tool(self, **kwargs):
             def register(fn): self.tools[fn.__name__] = fn; return fn
             return register
     server = Server(); register_meta_tools(server)

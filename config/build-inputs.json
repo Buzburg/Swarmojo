@@ -44,7 +44,7 @@
   },
   "environment": {
     "lockfile": "pixi.lock",
-    "sha256": "ad2ab7b0b761589567bf593d238198379ad9306c565aad5c48b47ee787231936",
+    "sha256": "7c57d6c3af1e9318f0248dfd735a6ca05b3fbf8be320513ecd831178605551de",
     "platform": "linux-64",
     "mojo_tested": "1.1.0",
     "python_tested": "3.12"

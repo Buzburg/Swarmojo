@@ -49,6 +49,8 @@ def test_new_launcher_from_another_directory_loads_selected_review_role(tmp_path
 def test_preferred_mcp_tool_and_legacy_alias_share_contract(tmp_path, monkeypatch):
     from fastmcp import Client
     from app import server
+    # This contract exercises operator-enabled model/provider calls.
+    monkeypatch.setattr(server.mcp.middleware[0], "profile", "local")
 
     monkeypatch.setattr(server, "DB_PATH", tmp_path / "missing.db")
     monkeypatch.setattr(server, "SKILLS_DIR", tmp_path / "skills")

@@ -1,6 +1,8 @@
 """FastMCP Tool Registrations for Swarmojo MetaHarness."""
 from __future__ import annotations
 
+from app.mcp_annotations import tool_annotations
+
 import json
 from pathlib import Path
 
@@ -21,7 +23,7 @@ def register_meta_tools(server: FastMCP) -> None:
     from app.meta.dedup_cache import DeduplicatedExecutionCache
     command_cache = DeduplicatedExecutionCache(workspace_root=execution.root_path)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_execute_approved'))
     def meta_execute_approved(request_id: str) -> str:
         """Retry a reviewed request after the operator approves it using the local control CLI."""
         record = execution.store.inspect(request_id)
@@ -29,22 +31,22 @@ def register_meta_tools(server: FastMCP) -> None:
                                  timeout=record['action']['timeout'])
         return json.dumps(value, indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_list_agents'))
     def meta_list_agents() -> str:
         """Lists all registered premade and custom specialist agents in the MetaHarness."""
         return json.dumps(harness.list_agents(), indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_list_teams'))
     def meta_list_teams() -> str:
         """Lists all registered multi-agent team topologies in the MetaHarness."""
         return json.dumps(harness.list_teams(), indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_list_models'))
     def meta_list_models() -> str:
         """Lists all registered local and remote model profiles (Ollama, LM Studio, vLLM, Deep Reasoner, mock)."""
         return json.dumps(harness.list_models(), indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_run_team'))
     def meta_run_team(
         task: str,
         team_id: str = "fullstack_team",
@@ -61,7 +63,7 @@ def register_meta_tools(server: FastMCP) -> None:
         )
         return json.dumps(report, indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_create_agent'))
     def meta_create_agent(
         id: str,
         name: str,
@@ -93,7 +95,7 @@ def register_meta_tools(server: FastMCP) -> None:
             "persistent": False,
         }, indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_create_environment'))
     def meta_create_environment(
         id: str,
         name: str,
@@ -126,12 +128,12 @@ def register_meta_tools(server: FastMCP) -> None:
     toolkit = PiCodingToolkit()
     recursion_engine = PrimeRecursionEngine()
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('coding_read_slice'))
     def coding_read_slice(rel_path: str, start_line: int = 1, end_line: int = 200) -> str:
         """Reads a line-numbered slice of a file (Pi-agent structure)."""
         return json.dumps(toolkit.read_file_slice(rel_path, start_line, end_line), indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('coding_edit_exact'))
     def coding_edit_exact(
         rel_path: str,
         target_content: str,
@@ -151,29 +153,29 @@ def register_meta_tools(server: FastMCP) -> None:
         res = execution.write_file(rel_path, content, expected_sha256=observed['sha256'])
         return json.dumps(res, indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('coding_write_atomic'))
     def coding_write_atomic(rel_path: str, content: str, overwrite: bool = False, request_id: str = "") -> str:
         """Atomically writes or overwrites a file with Rewind checkpointing."""
         if execution.tools.path(rel_path).exists() and not overwrite and not request_id:
             raise ValueError('File exists; explicitly request overwrite')
         return json.dumps(execution.write_file(rel_path, content, request_id=request_id or None), indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('coding_find_files'))
     def coding_find_files(pattern: str = "*.*", search_dir: str = ".") -> str:
         """Finds files matching pattern across workspace, ignoring noise directories."""
         return json.dumps(toolkit.find_files(pattern, search_dir), indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('coding_grep'))
     def coding_grep(pattern: str, search_dir: str = ".") -> str:
         """Searches files for regex or literal pattern."""
         return json.dumps(toolkit.grep_content(pattern, search_dir), indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('coding_symdex_callgraph'))
     def coding_symdex_callgraph(symbol: str) -> str:
         """Queries Symdex index for callers, callees, and definitions (<20 µs)."""
         return json.dumps(toolkit.symdex_callgraph(symbol), indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('coding_subagent_delegate'))
     def coding_subagent_delegate(
         mode: str,
         parent_goal: str,
@@ -199,13 +201,13 @@ def register_meta_tools(server: FastMCP) -> None:
         )
         return json.dumps(res, indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('coding_drift_evaluate'))
     def coding_drift_evaluate(goal: str, action: str) -> str:
         """Calculates angular drift from session goal (warns >=65°, blocks >=80°)."""
         from app.engines import evaluate_drift
         return json.dumps(evaluate_drift(goal, action), indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('coding_review_code'))
     def coding_review_code(code: str, file_path: str = "snippet.py") -> str:
         """Performs multi-criteria security, performance, and reliability static code review."""
         from app.engines.code_review import CodeReviewEngine
@@ -213,7 +215,7 @@ def register_meta_tools(server: FastMCP) -> None:
         report = engine.review_source(code, filename=file_path)
         return json.dumps(report.to_dict(), indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('coding_inspect_binary'))
     def coding_inspect_binary(file_path: str) -> str:
         """Inspects binary magic headers, architecture, entry point, and structure."""
         from app.engines.reverse_engineering import BinaryAnalysisEngine
@@ -221,7 +223,7 @@ def register_meta_tools(server: FastMCP) -> None:
         info = engine.identify_format(str(execution.tools.path(file_path)))
         return json.dumps(info.to_dict(), indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('coding_repo_codemap'))
     def coding_repo_codemap(workspace_root: str = ".", max_files: int = 50) -> str:
         """Extracts hierarchical repository codemap with symbol nodes and imports."""
         from app.engines.code_ledger import CodeLedgerEngine
@@ -231,7 +233,7 @@ def register_meta_tools(server: FastMCP) -> None:
         codemap = engine.build_repo_codemap(max_files=max_files)
         return json.dumps(codemap, indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_immunity_check'))
     def meta_immunity_check(error_text: str) -> str:
         """Scans error text against fleet herd immunity memory to retrieve instant remedies."""
         from app.meta.herd_immunity import HerdImmunityRegistry
@@ -239,24 +241,24 @@ def register_meta_tools(server: FastMCP) -> None:
         matches = registry.check_immunity(error_text)
         return json.dumps([m.to_dict() for m in matches], indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_antibody_check'))
     def meta_antibody_check(error_text: str) -> str:
         """Legacy alias: Scans error text against fleet herd immunity memory."""
         return meta_immunity_check(error_text)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_dedup_run'))
     def meta_dedup_run(command: str, cwd: str = ".", ttl_seconds: float = 60.0, request_id: str = "", input_paths: list[str] | None = None) -> str:
         """Proposes a durable argv command; execution requires exact operator approval."""
         res = command_cache.get_or_run(command, cwd=cwd, ttl_seconds=ttl_seconds,
                                        tenant_id="mcp", request_id=request_id or None, input_paths=input_paths or ())
         return json.dumps(res, indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_once_run'))
     def meta_once_run(command: str, cwd: str = ".", ttl_seconds: float = 60.0, request_id: str = "", input_paths: list[str] | None = None) -> str:
         """Legacy alias: Executes deduplicated shell command."""
         return meta_dedup_run(command, cwd=cwd, ttl_seconds=ttl_seconds, request_id=request_id, input_paths=input_paths)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_desktop_action'))
     def meta_desktop_action(action_type: str, x: int = 0, y: int = 0, text: str = "", dry_run: bool = True) -> str:
         """Dispatches high-speed desktop automation action (click, move, type) with safety bounds."""
         from app.meta.desktop_bridge import DesktopAutomationBridge
@@ -273,12 +275,12 @@ def register_meta_tools(server: FastMCP) -> None:
             res = {"status": "unsupported", "action_type": action_type}
         return json.dumps(res, indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_screenhand_action'))
     def meta_screenhand_action(action_type: str, x: int = 0, y: int = 0, text: str = "", dry_run: bool = True) -> str:
         """Legacy alias: Dispatches high-speed desktop automation action."""
         return meta_desktop_action(action_type=action_type, x=x, y=y, text=text, dry_run=dry_run)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_dispatch_quick_action'))
     def meta_dispatch_quick_action(action_id: str, context_text: str = "") -> str:
         """Dispatches omnipresent desktop action (explain_code, review_diff, humanize_prose, etc.)."""
         from app.meta.omnipresent_dispatcher import OmnipresentDispatcher
@@ -286,7 +288,7 @@ def register_meta_tools(server: FastMCP) -> None:
         res = dispatcher.dispatch_action(action_id, context_text=context_text or None)
         return json.dumps(res, indent=2)
 
-    @server.tool()
+    @server.tool(annotations=tool_annotations('meta_everywhere_dispatch'))
     def meta_everywhere_dispatch(action_id: str, context_text: str = "") -> str:
         """Legacy alias: Dispatches omnipresent desktop action."""
         return meta_dispatch_quick_action(action_id=action_id, context_text=context_text)

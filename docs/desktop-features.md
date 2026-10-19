@@ -6,10 +6,30 @@ governance ledger, approval store, and SQLite persistence.
 
 ## Projects and specialists
 
-Create a project first, then add the specialist roles it needs. Names and additional
+Create a project first, then add up to 16 specialists from the 21 available roles.
+The role picker includes Assistant, Coder, Writer, Designer, Forecaster, Researcher,
+Director, Marketer, Mathematician, Renigineer (reverse engineering), Accountant, Trader,
+Lawyer, and Adjuster, alongside the existing Studio and technical roles. Names and additional
 guidance are editable. Original role prompts, tool lists, skills, and memory policies
-remain in use. Pausing an agent excludes it from future team runs; it does not cancel
-an in-flight request. Per-agent model overrides use the workspace endpoint and key.
+remain in use. Each specialist has an **On/Off** switch and a **Team/Isolated** mode.
+Per-agent model overrides use the workspace endpoint and key.
+
+- **On + Team:** included when you select **Work with → Team**. Main combines the
+  enabled team specialists’ replies into a coordinated answer.
+- **On + Isolated:** open that specialist’s isolated workspace for a direct conversation.
+  It has its own history, agent memory, files, and approvals; shared project notes,
+  tasks, references, and other agents’ work do not enter its context.
+- **Off:** blocks new work for that specialist without deleting its configuration or
+  history. Queued team members are checked again before their model call. A response
+  already underway can finish; switching off is not a cancellation button.
+
+Isolated specialists still receive the project brief and follow its controls and
+shared budget. Isolation separates working context and files, not the model provider
+or an operating-system security boundary. Switching back to Team never merges isolated
+work. Its history and pending approvals remain accessible through **View isolated
+history**; new isolated messages require On + Isolated. Specialists with isolated
+turns cannot be removed while that history exists; turn them off to retain it.
+Participation settings persist across restarts and travel with project templates.
 
 Project tasks support owners, priorities, dependencies, and validated transitions.
 The task board records your assessment of progress. Discuss task prepares an editable

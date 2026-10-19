@@ -48,8 +48,12 @@ class AssistantVault:
 
     def __init__(self, workspace_root: str = "."):
         self.state_dir = Path(workspace_root) / ".mojo_assistant"
+        if self.state_dir.is_symlink():
+            raise ValueError("Assistant state links are not allowed")
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.vault_file = self.state_dir / "vault.json"
+        from app.credential_vault import EncryptedVault
+        self._credentials = EncryptedVault(workspace_root, self.vault_file)
         self.prefs_file = self.state_dir / "preferences.json"
         if not self.prefs_file.exists():
             self.prefs_file.write_text(json.dumps(UserPreferenceProfile().to_dict(), indent=2), encoding="utf-8")
@@ -68,34 +72,23 @@ class AssistantVault:
         return UserPreferenceProfile(**cur)
 
     def set_secret(self, key_name: str, secret_val: str) -> None:
-        """Stores a base64-obfuscated local secret with SHA-256 fingerprint."""
-        vault = self._read_vault()
-        b64_val = base64.b64encode(secret_val.encode("utf-8")).decode("utf-8")
-        h = hashlib.sha256(secret_val.encode("utf-8")).hexdigest()
-        vault[key_name] = {"payload": b64_val, "sha256": h, "updated_at": time.time()}
-        self.vault_file.write_text(json.dumps(vault, indent=2), encoding="utf-8")
+        """Stores an authenticated encrypted secret; migrates legacy base64 records.
+
+        Historical behavior: Stores a base64-obfuscated local secret with SHA-256 fingerprint.
+        """
+        # The historical base64 format described above is migrated on first access.
+        self._credentials.set(key_name, secret_val)
 
     def get_secret(self, key_name: str) -> Optional[str]:
-        vault = self._read_vault()
-        entry = vault.get(key_name)
-        if not entry:
-            return None
-        try:
-            return base64.b64decode(entry["payload"].encode("utf-8")).decode("utf-8")
-        except Exception:
-            return None
+        return self._credentials.get(key_name)
 
     def list_secrets(self) -> List[Dict[str, Any]]:
         vault = self._read_vault()
-        return [{"key": k, "sha256": v.get("sha256", "")[:12], "updated_at": v.get("updated_at")} for k, v in vault.items()]
+        return [{"key": k, "sha256": hashlib.sha256(v["ciphertext"].encode()).hexdigest()[:12],
+                 "updated_at": v.get("updated_at")} for k, v in vault.items()]
 
     def _read_vault(self) -> Dict[str, Any]:
-        if not self.vault_file.exists():
-            return {}
-        try:
-            return json.loads(self.vault_file.read_text(encoding="utf-8"))
-        except Exception:
-            return {}
+        return self._credentials.records()
 
 
 # -------------------------------------------------------------------------

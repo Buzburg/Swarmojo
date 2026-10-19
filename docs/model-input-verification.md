@@ -16,7 +16,7 @@ The GGUF header layout follows the [official GGML format specification](https://
 
 `scripts/build_llama.py` reads the pinned runtime source revision from the same manifest. It refuses modified source even when HEAD already matches the revision, refuses an unexpected origin, and verifies HEAD and source cleanliness again before configuring/building. It builds the existing CPU configuration without installing a service. The obsolete unpinned `--build-librwkv` path now fails with a pointer to this builder; downloading a `.pth` checkpoint under a quantized `.bin` label is no longer supported.
 
-The current environment lockfile is preserved, SHA-256 `ad2ab7b0b761589567bf593d238198379ad9306c565aad5c48b47ee787231936`. Use the checked-in lockfile for environment reproduction; changed lock contents require a deliberate review and manifest update. This increment adds no dependencies and does not resolve a new environment or rebuild/reinstall the working runtime.
+At the original model-input review, the environment lockfile was preserved, SHA-256 `ad2ab7b0b761589567bf593d238198379ad9306c565aad5c48b47ee787231936`. Use the checked-in lockfile for environment reproduction; changed lock contents require a deliberate review and manifest update. This increment adds no dependencies and does not resolve a new environment or rebuild/reinstall the working runtime.
 
 At that increment, the installed server reported `0.5.0-dev`, build 1, commit `46847e6`, built with GNU 13.3.0 for Linux x86_64. Its artifact identities were measured directly; the later [cancellation repair](gateway-cancellation-verification.md) records the currently installed derived build and preserves this runtime for rollback:
 
@@ -37,3 +37,11 @@ The actual supplied 2.9B file passed the new CLI: 1,919,047,616 bytes and SHA-25
 The supplied 7.2B file also passed the new CLI: 7,930,820,544 bytes and SHA-256 `cc93dce01fb8750627e4ba2a853de7803655b2fa65b74206587a5d9620bba14f`. This was a read-only file verification; the installed service continues using 2.9B.
 
 The expanded offline profile passed both required groups: **177 Python regression tests and 22 actual compiled native-broker tests**. Git's tracked-file inventory contained the reviewed lockfile and no model weights, ISO, runtime database or `.env`; exclusion checks confirmed the additional model/ISO patterns. Unrelated pending source files were left untouched.
+
+## MCP dependency update — October 18, 2026
+
+The MCP security update raises the FastMCP requirement to 4.1 and explicitly declares
+cryptography. Pixi resolved FastMCP and fastmcp-slim from 4.0.10 to 4.1.1. The new
+reviewed lock SHA-256 is `7c57d6c3af1e9318f0248dfd735a6ca05b3fbf8be320513ecd831178605551de`, also recorded in
+`config/build-inputs.json`. Model identities and the model-selection default were not
+changed. This dependency update does not revalidate model inference or GGUF parity.

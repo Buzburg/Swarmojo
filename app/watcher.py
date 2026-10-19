@@ -18,6 +18,7 @@ from typing import Any, Dict, Optional, Set
 
 from app.config import KNOWLEDGE_DIR, SKILLS_DIR, BASE_DIR
 from app.okf_loader import ingest_okf_file
+from app.mcp_annotations import plugin_allowed
 
 _WATCHER_THREAD: Optional[threading.Thread] = None
 _STOP_EVENT = threading.Event()
@@ -31,7 +32,7 @@ _WATCHER_STATS: Dict[str, Any] = {
 
 def _reload_custom_tool(py_path: Path, mcp_instance: Any = None):
     """Dynamically reloads a single tool file from custom_tools/."""
-    if py_path.name.startswith("__"):
+    if py_path.name.startswith("__") or not plugin_allowed(py_path, BASE_DIR / "custom_tools", reload=True):
         return
     try:
         mod_name = f"custom_tools.{py_path.stem}"
@@ -50,7 +51,9 @@ def _reload_custom_tool(py_path: Path, mcp_instance: Any = None):
 def _watcher_loop(mcp_instance: Any = None, poll_interval: float = 1.0):
     """Polling loop with mtime tracking and debouncing."""
     custom_dir = BASE_DIR / "custom_tools"
-    dirs_to_watch = [KNOWLEDGE_DIR, SKILLS_DIR, custom_dir]
+    dirs_to_watch = [KNOWLEDGE_DIR, SKILLS_DIR]
+    if os.getenv("SWARMOJO_MCP_PROFILE") == "local" and os.getenv("SWARMOJO_MCP_HOT_RELOAD") == "1":
+        dirs_to_watch.append(custom_dir)
     for d in dirs_to_watch:
         d.mkdir(parents=True, exist_ok=True)
 

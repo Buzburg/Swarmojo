@@ -9,6 +9,14 @@ from app.engines.personal_assistant import (
 )
 
 
+@pytest.fixture(autouse=True)
+def isolated_assistant_workspace(tmp_path, monkeypatch):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    monkeypatch.chdir(workspace)
+    monkeypatch.setenv("SWARMOJO_CONTROL_DIR", str(tmp_path / "operator-control"))
+
+
 def test_vault_credentials_and_preferences():
     engine = PersonalAssistantEngine()
     store_res = engine.store_credential("github_pat", "ghp_mock_secret_token_12345")

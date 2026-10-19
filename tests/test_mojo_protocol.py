@@ -19,7 +19,8 @@ async def verify(binary: str, root: str) -> None:
         (state / 'knowledge').mkdir()
         (state / 'skills').mkdir()
         shutil.copy2(Path(root) / 'skills/customer_service.md', state / 'skills/customer_service.md')
-        env = dict(os.environ, ROMS_DATA_DIR=str(state / 'data'),
+        env = dict(os.environ, SWARMOJO_MCP_PROFILE="local",
+                   SWARMOJO_MCP_ALLOW_DESTRUCTIVE="1", ROMS_DATA_DIR=str(state / 'data'),
                    ROMS_DB_PATH=str(state / 'data/roms.db'),
                    ROMS_KNOWLEDGE_DIR=str(state / 'knowledge'),
                    ROMS_SKILLS_DIR=str(state / 'skills'),
