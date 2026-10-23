@@ -6,3 +6,4 @@ aeon/vendor/** -text
 
 # Vendored offline tools and licenses must retain their pinned source bytes.
 app/desktop_assets/utilities/* -text
+pixi.lock text eol=lf
