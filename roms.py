@@ -21,6 +21,12 @@ def run_entry():
     elif len(sys.argv) > 1 and sys.argv[1] == "correction":
         from app.corrections_cli import main
         raise SystemExit(main(sys.argv[2:]))
+    elif len(sys.argv) > 1 and sys.argv[1] == "knowledge":
+        from app.knowledge_web import main
+        main(sys.argv[2:])
+    elif len(sys.argv) > 1 and sys.argv[1] == "skills":
+        from app.knowledge_skill_cli import main
+        raise SystemExit(main(sys.argv[2:]))
     elif len(sys.argv) > 1 and sys.argv[1] == "mcp":
         from app.server import start_server
         start_server()

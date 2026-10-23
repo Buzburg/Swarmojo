@@ -1,5 +1,8 @@
 # Custom Omarchy WSL test build
 
+Historical verification of an earlier runtime; superseded for current knowledge setup by [ROMS integration](roms-integration.md). These results do not verify the current embedding backend.
+
+
 Built October 5, 2026. This is an Arch-based WSL variant using Omarchy 4.0.0 userland from the supplied ISO, Mojo socket transport, the existing ROMS memory service, and real RWKV-7 inference. It is an early working-system build, not completion of all 20 tasks in the pre-build plan.
 
 ## Use

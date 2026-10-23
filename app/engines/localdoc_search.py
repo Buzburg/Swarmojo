@@ -1,13 +1,10 @@
 # Copyright 2026 Buzburg LLC
 # SPDX-License-Identifier: Apache-2.0
-"""Bounded local document ingestion and cached semantic/keyword retrieval."""
+"""Bounded local document ingestion and keyword retrieval."""
 
-import json
 from dataclasses import dataclass
-from hashlib import sha256
 from pathlib import Path
-from tempfile import NamedTemporaryFile
-from typing import Protocol, cast, Any
+from typing import Any
 
 try:
     import numpy as np
@@ -16,15 +13,9 @@ except ImportError:
     np = None  # type: ignore
     NDArray = Any  # type: ignore
 
-MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-MODEL_REVISION = "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
 MAX_FILES = 300
 MAX_BYTES = 5_000_000
 MAX_CHUNKS = 3000
-
-
-class Encoder(Protocol):
-    def encode(self, sentences: list[str], **kwargs: object) -> Any: ...
 
 
 @dataclass(frozen=True)
@@ -127,34 +118,3 @@ def keyword_search(passages: list[Passage], query: str, limit: int = 5) -> list[
         raise ValueError(
             "Documents need searchable words, not just punctuation or stop words."
         ) from exc
-
-
-def semantic_search(
-    passages: list[Passage], query: str, encoder: Encoder, cache: Path, limit: int = 5
-) -> list[Match]:
-    if not query.strip():
-        raise ValueError("Enter a search phrase.")
-    payload = json.dumps([MODEL, MODEL_REVISION, [(p.source, p.line, p.text) for p in passages]])
-    cache.mkdir(parents=True, exist_ok=True)
-    target = cache / (sha256(payload.encode()).hexdigest() + ".npy")
-    matrix: NDArray[np.float32]
-    if target.exists():
-        matrix = np.load(target, allow_pickle=False)
-    else:
-        matrix = encoder.encode(
-            [p.text for p in passages], normalize_embeddings=True, show_progress_bar=False
-        )
-        with NamedTemporaryFile(dir=cache, suffix=".tmp", delete=False) as temporary:
-            np.save(temporary, matrix, allow_pickle=False)
-        Path(temporary.name).replace(target)
-    query_vector = encoder.encode([query], normalize_embeddings=True, show_progress_bar=False)
-    return rank(passages, matrix @ query_vector[0], limit)
-
-
-def load_encoder() -> Encoder:
-    from sentence_transformers import SentenceTransformer
-
-    return cast(
-        Encoder,
-        SentenceTransformer(MODEL, revision=MODEL_REVISION, device="cpu", trust_remote_code=False),
-    )

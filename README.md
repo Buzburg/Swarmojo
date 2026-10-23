@@ -18,6 +18,8 @@ Turn an idea into a project, bring in the specialists you need, and build with a
 - **Choose your specialists.** Choose from 21 roles, including Assistant, Coder, Writer, Designer, Forecaster, Researcher, Director, Marketer, Mathematician, Renigineer, Accountant, Trader, Lawyer, and Adjuster. Rename them, give them project guidance, pause them, and choose per-agent model settings. Their specialist prompts, skills, tools, and memory policies stay intact.
 - **Think with your Main agent.** Use a separate everyday conversation for questions, planning, and ideas that don’t belong to one project.
 - **Keep useful context close.** Save project notes, search conversations and references, read public web pages, and select excerpts from your existing ROMS knowledge index.
+- **Take evidence into your next task.** Select ROMS references in Memory, add a task and constraints, preview the resulting brief, and download it as Markdown. Stale references must be selected again before export.
+- **Check data before handing it off.** Local utilities provide an offline CSV comparer and folder/ZIP filename checker. Download either tool and open it locally; your files stay in that browser.
 - **Stay in control of changes.** Inspect exact file contents and commands before approving them. Set action permissions, context exclusions, and project budgets. Review receipts and activity as work progresses.
 - **Pick up where you left off.** Projects and chats persist locally. Drafts and your last workspace view survive a browser refresh. After a server interruption, restore a request as a draft and decide when to send it again.
 - **Take your setup with you.** Export a reusable project template and import it into another Swarmojo workspace. Templates carry the brief, specialist configuration, and controls—not connection keys or conversation history.
@@ -75,7 +77,9 @@ Open **http://127.0.0.1:8765**. The installed `swarmojo-desktop` command launche
 
 Use **Ctrl+K / Cmd+K** for quick navigation and **Ctrl+, / Cmd+,** for Settings. Templates are available in project Memory and Workspace settings.
 
-ROMS remains part of Swarmojo, including its retrieval, memory, and context components. The desktop searches an existing local ROMS index on request. Selected excerpts become project reference snapshots; they do not grant permission to execute actions.
+Swarmojo now includes the ROMS 1.4 knowledge layer: one local Q8 retrieval backend, richer document intake, source-derived skills, bounded task-skill drafting, and portable task briefs. The desktop searches an existing local ROMS index on request. Selected excerpts become project reference snapshots; they do not grant permission to execute actions.
+
+For full knowledge indexing and task-skill authoring, see [ROMS setup and upgrades](docs/roms-integration.md). The [repository review](docs/repository-review.md) records which Buzburg projects were added, already present, or deferred.
 
 ## Your models, your choices
 

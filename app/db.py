@@ -59,6 +59,17 @@ def init_database(db_path: Path | str | None = None) -> None:
     conn = get_connection(db_path)
     cur = conn.cursor()
 
+    # Reject incompatible indexes before modifying their schema or contents.
+    schema = cur.execute("SELECT sql FROM sqlite_master WHERE name = 'vec_chunks'").fetchone()
+    if schema is not None:
+        import re
+        dimension = re.search(r"embedding\s+float\s*\[\s*(\d+)\s*\]", schema[0], re.I)
+        if dimension is None or int(dimension.group(1)) != EMBEDDING_DIM:
+            raise ValueError(
+                "Embedding dimension differs from the existing index; set ROMS_DB_PATH "
+                "to a new database and re-ingest your documents"
+            )
+
     # 1. OKF Registry: Tracks ingested documents, metadata, and SHA-256 checksums
     cur.execute("""
     CREATE TABLE IF NOT EXISTS okf_registry (
@@ -115,7 +126,7 @@ def init_database(db_path: Path | str | None = None) -> None:
     cur.execute("CREATE INDEX IF NOT EXISTS idx_tickets_status ON support_tickets(status);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_tickets_email ON support_tickets(customer_email);")
 
-    # 7. Tool Registry & Discovery (Smart Tool RAG)
+    # 7. Tool Registry & Discovery (AnyTool Smart Tool RAG)
     cur.execute("""
     CREATE TABLE IF NOT EXISTS tool_registry (
         tool_name TEXT PRIMARY KEY,
@@ -195,6 +206,9 @@ def init_database(db_path: Path | str | None = None) -> None:
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+
+    from app.knowledge_skills import schema as skill_schema
+    skill_schema(conn)
 
     conn.commit()
     conn.close()

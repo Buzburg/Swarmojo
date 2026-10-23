@@ -33,7 +33,7 @@ jobs:
         env:
           HF_HUB_OFFLINE: '1'
       - name: Verify portable integrations and file boundaries
-        run: python -m pytest tests/test_integrations.py tests/test_rehearsal.py tests/test_rehearsal_interfaces.py tests/test_workbench_context.py tests/test_patch_file_boundaries.py tests/test_new_harness_upgrades.py tests/test_sovereign_engines_and_optimizations.py tests/test_meta_comparison.py tests/test_meta_harness.py tests/test_meta_runtime_safety.py tests/test_desktop.py tests/test_desktop_release.py tests/test_coding_agent.py tests/test_polyharness.py -q
+        run: python -m pytest tests/test_integrations.py tests/test_rehearsal.py tests/test_rehearsal_interfaces.py tests/test_workbench_context.py tests/test_patch_file_boundaries.py tests/test_new_harness_upgrades.py tests/test_sovereign_engines_and_optimizations.py tests/test_meta_comparison.py tests/test_meta_harness.py tests/test_meta_runtime_safety.py tests/test_desktop.py tests/test_desktop_release.py tests/test_desktop_integrations.py tests/test_knowledge_brief.py tests/test_embeddinggemma.py tests/test_coding_agent.py tests/test_polyharness.py -q
         env:
           HF_HUB_OFFLINE: '1'
       - name: Verify Linux request replay and patch staging
@@ -45,3 +45,37 @@ jobs:
         run: python -m pip install --no-deps .
       - name: Verify installed launchers outside the source tree
         run: python -I -c "import subprocess, sys, tempfile; subprocess.run([sys.executable, '-I', '-m', 'swarmmojo', '--help'], cwd=tempfile.gettempdir(), check=True); subprocess.run([sys.executable, '-I', '-m', 'swarmmojo', 'gov', 'org'], cwd=tempfile.gettempdir(), check=True)"
+  native-knowledge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install local knowledge dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y tesseract-ocr tesseract-ocr-eng poppler-utils fonts-liberation
+          python -m pip install 'torch>=2.5' --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e '.[ml,test]' mojo==1.1.0
+      - name: Build native knowledge and execution boundaries
+        run: |
+          python scripts/build_search_native.py
+          mkdir -p build
+          mojo build app_mojo/main.mojo -I . -o build/swarmojo-mcp
+          mojo build app_mojo/omarchy_broker.mojo -o build/omarchy-broker
+          mojo build app_mojo/staging_sandbox.mojo -o build/staging-sandbox
+          python scripts/fetch_embedding.py
+      - name: Verify the integrated knowledge runtime offline
+        run: |
+          export OMARCHY_BROKER_BINARY="$PWD/build/omarchy-broker"
+          export OMARCHY_SANDBOX_BINARY="$PWD/build/staging-sandbox"
+          export ROMS_PYTHON_PREFIX="$(python -c 'import sys; print(sys.prefix)')"
+          export PYTHONEXECUTABLE="$(python -c 'import sys; print(sys.executable)')"
+          export MOJO_PYTHON_LIBRARY="$(python -c 'import os, sysconfig; print(os.path.join(sysconfig.get_config_var("LIBDIR"), sysconfig.get_config_var("LDLIBRARY")))')"
+          export PYTHONPATH="$PWD:$(python -c 'import site; print(":".join(site.getsitepackages()))')"
+          python scripts/verify_embeddinggemma.py
+          python -m pytest -q
+          python tests/test_mojo_protocol.py "$PWD/build/swarmojo-mcp" "$PWD"
+        env:
+          HF_HUB_OFFLINE: '1'
+          TRANSFORMERS_OFFLINE: '1'

@@ -54,41 +54,6 @@ def test_duplicate_query_terms_do_not_expand_fts_expression():
     assert rag._sanitize_fts_query('refund refund refund') == rag._sanitize_fts_query('refund')
 
 
-def test_filtered_zg_search_batches_vector_result_metadata(monkeypatch):
-    connection = sqlite3.connect(":memory:")
-    connection.execute("CREATE TABLE fts_chunks (chunk_id INTEGER, doc_id TEXT, content TEXT)")
-    connection.execute("CREATE TABLE okf_registry (doc_id TEXT, doc_type TEXT, title TEXT)")
-    connection.execute("INSERT INTO fts_chunks VALUES (1, 'candidate.md', 'unrelated candidate text')")
-    connection.executemany(
-        "INSERT INTO okf_registry VALUES (?, ?, ?)",
-        [("candidate.md", "policy", "Candidate"),
-         ("allowed.md", "policy", "Allowed"),
-         ("excluded.md", "guide", "Excluded")],
-    )
-    connection.commit()
-    statements = []
-    connection.set_trace_callback(statements.append)
-    monkeypatch.setattr(zgsearch, "get_connection", lambda *args: connection)
-    monkeypatch.setattr(zgsearch, "vector_search", lambda *args, **kwargs: [
-        {"chunk_id": 10, "doc_id": "allowed.md", "content": "vector-only allowed", "distance": 0.1},
-        {"chunk_id": 11, "doc_id": "excluded.md", "content": "vector-only excluded", "distance": 0.2},
-        {"chunk_id": 12, "doc_id": "missing.md", "content": "vector-only missing registry", "distance": 0.3},
-    ])
-
-    results = zgsearch.zg_search("query", filters={"doc_type": "policy"}, limit=5)
-
-    metadata_reads = [
-        statement for statement in statements
-        if "SELECT doc_id, doc_type, title FROM okf_registry WHERE doc_id IN" in statement
-    ]
-    assert len(metadata_reads) == 1
-    assert [(item["doc_id"], item["title"], item["doc_type"]) for item in results] == [
-        ("allowed.md", "Allowed", "policy"),
-        ("missing.md", "missing.md", "general"),
-    ]
-    connection.close()
-
-
 def test_zg_top_k_lexical_ranking_matches_stable_full_sort():
     candidates = [
         {"chunk_id": index, "fuzzy_score": float((index * 37) % 101)}
@@ -412,7 +377,7 @@ def test_explicit_embedding_connections_keep_their_own_vectors(monkeypatch):
     assert len(calls) == 2
 
 
-@pytest.mark.parametrize('invalid', [[1.0], [[0.5] * 384], [float('nan')] * 384, [float('inf')] * 384], ids=['wrong-length', 'nested', 'nan', 'infinity'])
+@pytest.mark.parametrize('invalid', [[1.0], [[0.5] * 768], [float('nan')] * 768, [float('inf')] * 768], ids=['wrong-length', 'nested', 'nan', 'infinity'])
 def test_invalid_provider_vectors_are_not_cached(monkeypatch, invalid):
     monkeypatch.setattr(rag, 'compute_embedding_vector', lambda query: invalid)
     with embedding_db() as connection:
@@ -421,9 +386,9 @@ def test_invalid_provider_vectors_are_not_cached(monkeypatch, invalid):
         assert connection.execute('SELECT COUNT(*) FROM embedding_cache').fetchone()[0] == 0
 
 
-@pytest.mark.parametrize('bad_blob', [b'bad', struct.pack('384f', *([float('nan')] * 384))], ids=['wrong-length', 'nan'])
+@pytest.mark.parametrize('bad_blob', [b'bad', struct.pack('768f', *([float('nan')] * 768))], ids=['wrong-length', 'nan'])
 def test_corrupt_persistent_embedding_is_recomputed(monkeypatch, bad_blob):
-    monkeypatch.setattr(rag, 'compute_embedding_vector', lambda query: [0.5] * 384)
+    monkeypatch.setattr(rag, 'compute_embedding_vector', lambda query: [0.5] * 768)
     with embedding_db() as connection:
         expected = rag._get_query_embedding('fixture', conn=connection)
         connection.execute('UPDATE embedding_cache SET embedding_blob = ?', (bad_blob,))
@@ -456,7 +421,7 @@ def test_persistent_embedding_cache_avoids_repeat_computation(monkeypatch):
 
     def embed(query):
         calls.append(1)
-        return [0.5] * 384
+        return [0.5] * 768
 
     monkeypatch.setattr(rag, 'compute_embedding_vector', embed)
     with embedding_db() as connection:
@@ -464,19 +429,19 @@ def test_persistent_embedding_cache_avoids_repeat_computation(monkeypatch):
     assert len(calls) == 1
 
 
-def test_embedding_endpoint_changes_recompute_query(monkeypatch):
+def test_embedding_revision_changes_recompute_query(monkeypatch):
     from app import config
-    monkeypatch.setattr(config, 'EMBEDDING_PROVIDER', 'openai')
+    from app import embeddinggemma
     calls = []
 
     def embed(query):
         calls.append(1)
-        return [float(len(calls))] * 384
+        return [float(len(calls))] * 768
 
     monkeypatch.setattr(rag, 'compute_embedding_vector', embed)
     with embedding_db() as connection:
         first = rag._get_query_embedding('fixture', conn=connection)
-        monkeypatch.setattr(config, 'OPENAI_EMBED_URL', 'http://localhost:9999/v1/embeddings')
+        monkeypatch.setattr(embeddinggemma, 'REVISION', 'different-revision')
         assert rag._get_query_embedding('fixture', conn=connection) != first
     assert len(calls) == 2
 
@@ -486,7 +451,7 @@ def test_hot_embedding_memory_cache_avoids_sql(monkeypatch):
 
     def embed(query):
         calls.append(1)
-        return [0.5] * 384
+        return [0.5] * 768
 
     monkeypatch.setattr(rag, 'compute_embedding_vector', embed)
     with embedding_db() as connection:
@@ -504,15 +469,15 @@ def test_legacy_query_only_cache_is_not_trusted(monkeypatch):
 
     def embed(query):
         calls.append(1)
-        return [0.5] * 384
+        return [0.5] * 768
 
     monkeypatch.setattr(rag, 'compute_embedding_vector', embed)
     legacy_hash = hashlib.sha256(b'fixture').hexdigest()
     with embedding_db() as connection:
         connection.execute('INSERT INTO embedding_cache VALUES (?, ?)',
-                           (legacy_hash, struct.pack('384f', *([1.0] * 384))))
+                           (legacy_hash, struct.pack('768f', *([1.0] * 768))))
         result = rag._get_query_embedding('fixture', conn=connection)
-        assert result == struct.pack('384f', *([0.5] * 384))
+        assert result == struct.pack('768f', *([0.5] * 768))
         assert connection.execute('SELECT COUNT(*) FROM embedding_cache').fetchone()[0] == 2
     assert len(calls) == 1
 

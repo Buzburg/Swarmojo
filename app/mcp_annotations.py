@@ -5,6 +5,9 @@ import re
 
 # Read operations may initialize local indexes/caches. They do not edit user content.
 READ_TOOLS = frozenset('''
+prepare_knowledge_brief prepare_task_skill finalize_task_skill draft_task_skill
+search_knowledge_skills get_knowledge_skill search_saved_task_skills get_saved_task_skill
+get_knowledge_ingestion_status knowledge_import_progress knowledge_table_of_contents
 list_knowledge_documents get_file_watcher_status get_ticket list_tickets
 get_system_metrics list_skills get_tool_health_report get_zg_facets list_topics
 roms_sieve_compact roms_titans_recall roms_symdex_lookup roms_shield_forecast
@@ -22,12 +25,14 @@ roms_shield_repair_json roms_prompt_lookup symnexus_query symdex_query
 '''.split())
 # These may call a configured embedding/model/search provider, even during retrieval.
 NETWORK_TOOLS = frozenset('''
-search_knowledge_base search_grounded_context search_by_topic search_tools zg_search
+create_task_skill revise_saved_task_skill draft_task_skill prepare_task_skill queue_knowledge_path queue_knowledge_text
+search_knowledge_base search_grounded_context search_tools
 swarmmojo_prepare_harness roms_prepare_harness add_knowledge_document reload_knowledge
  autokarpathy_generate_dataset autokarpathy_optimize_prompt autokarpathy_eval_cartridge
  autoresearch meta_run_team coding_subagent_delegate
 '''.split())
 DESTRUCTIVE_TOOLS = frozenset('''
+forget_task_skill
 memory_forget roms_titans_erase delta_rewind_rollback rewind_rollback_workspace roms_snapshot_rewind
 '''.split())
 EXECUTION_TOOLS = frozenset('''

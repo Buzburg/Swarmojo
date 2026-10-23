@@ -2,9 +2,15 @@ Swarmojo: portable agent harness, derived from ROMS
 Copyright 2026 Buzburg LLC
 
 This software and related documentation are licensed under the Apache License, Version 2.0.
-Third-party libraries (e.g. SQLite, SentenceTransformers, FastMCP, Mojo) retain their respective licenses.
+Third-party libraries (e.g. SQLite, FastMCP, Mojo) retain their respective licenses.
 
 Selected Agency Agents playbooks are distributed under their original MIT license.
 See third_party/agency-agents/LICENSE and config/skill_sources.json for attribution,
 upstream revision, original paths and content hashes. Their fictional role identities
 do not certify Swarmojo capabilities, experience, memory or autonomous authority.
+
+Row Witness and Path Carry are bundled as pinned standalone HTML downloads under
+app/desktop_assets/utilities/. Their original MIT licenses and Path Carry
+third-party notices are included beside the artifacts. PROVENANCE.json records
+source revisions and generated artifact hashes. ROMS v1.4.0 provenance is in
+config/roms-upstream.json.

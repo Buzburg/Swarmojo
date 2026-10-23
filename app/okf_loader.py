@@ -1,25 +1,23 @@
 """OKF (Open Knowledge Format) & Universal Multi-Format Document Ingestion Engine.
 
-Inspired by Open Knowledge Format (OKF) specifications:
+Document intake capabilities:
 - Heterogeneous document support: .md, .csv, .json/.jsonl, .txt, source code (.py, .mojo, .sql, .ts, etc.)
 - Schema-preserving tabular chunking: Column headers retained across every CSV chunk
 - Synchronously populates both sqlite-vec (semantic vector index) and SQLite FTS5 (BM25 lexical index)
 - SHA-256 deduplication and Tier-0 RRF cache auto-invalidation
 """
 
-import csv
 import hashlib
-import io
-import itertools
 import json
 import os
 from pathlib import Path
 from typing import List, Optional, Tuple
-import frontmatter
 import numpy as np
 
 from app.config import get_embedding_model, KNOWLEDGE_DIR
 from app.db import get_connection
+from app.document_extract import BINARY_EXTENSIONS
+from app.document_parse import parse_document, fit_model_window, PARSER_VERSION
 
 SUPPORTED_EXTENSIONS = {
     ".md",
@@ -28,7 +26,7 @@ SUPPORTED_EXTENSIONS = {
     ".tsv",
     ".json",
     ".jsonl",
-    ".txt",
+    ".txt", ".log", ".ndjson", ".htm",
     ".py",
     ".mojo",
     ".sql",
@@ -39,116 +37,10 @@ SUPPORTED_EXTENSIONS = {
     ".tsx", ".jsx", ".rs", ".go", ".c", ".h", ".cpp", ".hpp",
     ".toml", ".yaml", ".yml", ".ini", ".css", ".html", ".xml",
 }
+SUPPORTED_EXTENSIONS |= BINARY_EXTENSIONS
 
 
-def _parse_markdown(path: Path) -> Tuple[str, str, str, List[str]]:
-    """Parses Markdown file, extracting OKF frontmatter and paragraph chunks."""
-    with open(path, "r", encoding="utf-8", errors="replace") as f:
-        post = frontmatter.load(f)
-
-    filename = path.name
-    title = post.metadata.get("title", filename)
-    doc_type = post.metadata.get("type", "general")
-    content = post.content.strip()
-    if not content:
-        return title, doc_type, "", []
-
-    paragraphs = [p.strip() for p in content.split("\n\n") if len(p.strip()) > 5]
-    return title, doc_type, content, paragraphs
-
-
-def _parse_csv(path: Path, rows_per_chunk: int = 5) -> Tuple[str, str, str, List[str]]:
-    """Parses tabular CSV/TSV, preserving header context on every chunk for local LLMs."""
-    delimiter = "\t" if path.suffix.lower() == ".tsv" else ","
-    raw_content = path.read_text(encoding="utf-8", errors="replace")
-    reader = csv.reader(io.StringIO(raw_content), delimiter=delimiter)
-    headers = next(reader, None)
-    if headers is None:
-        return path.name, "tabular", "", []
-
-    header_str = ", ".join(headers)
-    chunks = []
-    row_offset = 0
-    while chunk_rows := list(itertools.islice(reader, rows_per_chunk)):
-        lines = [f"Table: {path.name}", f"Columns: {header_str}", "Records:"]
-        for row_idx, row in enumerate(chunk_rows, start=row_offset + 1):
-            record_items = [
-                f"{col}: {val}"
-                for col, val in zip(headers, row)
-                if val.strip()
-            ]
-            lines.append(f"- Row {row_idx}: " + "; ".join(record_items))
-        chunks.append("\n".join(lines))
-        row_offset += len(chunk_rows)
-
-    if not chunks:
-        chunks.append(f"Table: {path.name}\nColumns: {header_str}\n(No data rows)")
-
-    title = f"Dataset: {path.name}"
-    return title, "tabular", raw_content, chunks
-
-
-def _parse_json(path: Path) -> Tuple[str, str, str, List[str]]:
-    """Parses JSON or JSONL into semantically coherent chunk blocks."""
-    raw_content = path.read_text(encoding="utf-8", errors="replace").strip()
-    if not raw_content:
-        return path.name, "json_dataset", "", []
-
-    chunks = []
-    is_jsonl = path.suffix.lower() == ".jsonl"
-
-    if is_jsonl:
-        lines = [line.strip() for line in raw_content.splitlines() if line.strip()]
-        for i in range(0, len(lines), 3):
-            group = lines[i : i + 3]
-            chunk_text = f"Dataset {path.name} (Lines {i+1}-{i+len(group)}):\n" + "\n".join(group)
-            chunks.append(chunk_text)
-    else:
-        try:
-            data = json.loads(raw_content)
-            if isinstance(data, list):
-                for i in range(0, len(data), 3):
-                    group = data[i : i + 3]
-                    chunks.append(
-                        f"Dataset {path.name} (Items {i+1}-{i+len(group)}):\n"
-                        + json.dumps(group, indent=2)
-                    )
-            elif isinstance(data, dict):
-                for k, v in data.items():
-                    val_str = json.dumps(v, indent=2) if isinstance(v, (dict, list)) else str(v)
-                    chunks.append(f"Document {path.name} [{k}]:\n{val_str}")
-            else:
-                chunks.append(f"Document {path.name}:\n{raw_content}")
-        except Exception:
-            chunks = [p.strip() for p in raw_content.split("\n\n") if len(p.strip()) > 5]
-
-    title = f"Structured Data: {path.name}"
-    return title, "json_dataset", raw_content, chunks
-
-
-def _parse_text_or_code(path: Path) -> Tuple[str, str, str, List[str]]:
-    """Parses plain text or source code files into logical code/text chunks."""
-    raw_content = path.read_text(encoding="utf-8", errors="replace").strip()
-    if not raw_content:
-        return path.name, "code", "", []
-
-    suffix = path.suffix.lower()
-    doc_type = "code" if suffix in {".py", ".mojo", ".sql", ".sh", ".ps1", ".ts", ".js"} else "text"
-
-    raw_blocks = [b.strip() for b in raw_content.split("\n\n") if len(b.strip()) > 5]
-    chunks = []
-    for b in raw_blocks:
-        chunk_text = f"File: {path.name} ({doc_type})\n{b}"
-        chunks.append(chunk_text)
-
-    if not chunks:
-        chunks = [f"File: {path.name} ({doc_type})\n{raw_content}"]
-
-    title = f"Source: {path.name}"
-    return title, doc_type, raw_content, chunks
-
-
-def ingest_document_file(filepath: Path | str, db_path: Path | str | None = None, *, doc_id: str | None = None) -> bool:
+def ingest_document_file(filepath: Path | str, db_path: Path | str | None = None, *, doc_id: str | None = None, display_name: str | None = None) -> bool:
     """Ingests any supported file (.md, .csv, .json, .txt, code) into both vector and FTS5 indexes.
 
     Returns True if ingested/updated, False if unchanged.
@@ -161,24 +53,22 @@ def ingest_document_file(filepath: Path | str, db_path: Path | str | None = None
     if suffix not in SUPPORTED_EXTENSIONS:
         return False
 
-    if suffix in {".md", ".markdown"}:
-        title, doc_type, raw_content, chunks = _parse_markdown(path)
-    elif suffix in {".csv", ".tsv"}:
-        title, doc_type, raw_content, chunks = _parse_csv(path)
-    elif suffix in {".json", ".jsonl"}:
-        title, doc_type, raw_content, chunks = _parse_json(path)
-    else:
-        title, doc_type, raw_content, chunks = _parse_text_or_code(path)
-
-    if not raw_content or not chunks:
-        return False
-
     filename = doc_id if doc_id is not None else path.name
     if not isinstance(filename, str) or not filename or len(filename) > 4096 or '\x00' in filename:
         raise ValueError('Invalid document identity')
-    checksum = hashlib.sha256(raw_content.encode("utf-8")).hexdigest()
+    from app import config
+    if config.EMBEDDING_PROVIDER != "local":
+        raise ValueError("ROMS ingestion requires local embeddings")
+    from app.document_parse import MAX_FILE_BYTES
+    with path.open("rb") as source:
+        raw = source.read(MAX_FILE_BYTES + 1)
+    if len(raw) > MAX_FILE_BYTES:
+        raise ValueError("Document exceeds the 32 MiB ingestion limit")
+    identity = json.dumps([PARSER_VERSION, config.EMBEDDING_PROVIDER, config.EMBEDDING_MODEL_NAME,
+                           config.EMBEDDING_DIM], ensure_ascii=False).encode('utf-8')
+    checksum = hashlib.sha256(identity + b'\0' + raw).hexdigest()
 
-    from app.config import EMBEDDING_DIM, EMBEDDING_PROVIDER, compute_embedding_vector
+    from app.config import EMBEDDING_DIM
     from app.topic import tag_chunks_with_topics
 
     conn = get_connection(db_path)
@@ -188,31 +78,22 @@ def ingest_document_file(filepath: Path | str, db_path: Path | str | None = None
     if existing and existing[0] == checksum:
         return False
 
+    parsed = parse_document(path)
+    title, doc_type, raw_content, chunks = parsed.title, parsed.kind, parsed.text, parsed.chunks
+    if parsed.raw != raw:
+        raise ValueError("Document changed during extraction; retry after writing completes")
+    if display_name:
+        title = title.replace(path.name, display_name)
+    if not raw_content or not chunks:
+        raise ValueError("No searchable text recovered; previous index was retained")
+
     # Finish all model work and validate every vector before touching the old index.
-    if EMBEDDING_PROVIDER == "local":
-        try:
-            import torch
-            model = get_embedding_model()
-            if hasattr(torch, "inference_mode"):
-                with torch.inference_mode():
-                    batch_embeddings = np.asarray(
-                        model.encode(chunks, output_value="sentence_embedding", batch_size=32),
-                        dtype=np.float32,
-                    )
-            else:
-                batch_embeddings = np.asarray(
-                    model.encode(chunks, output_value="sentence_embedding", batch_size=32),
-                    dtype=np.float32,
-                )
-        except Exception:
-            model = get_embedding_model()
-            batch_embeddings = np.asarray(
-                model.encode(chunks, output_value="sentence_embedding", batch_size=32),
-                dtype=np.float32,
-            )
-    else:
+    import torch
+    model = get_embedding_model()
+    chunks = fit_model_window(chunks, model)
+    with torch.inference_mode():
         batch_embeddings = np.asarray(
-            [compute_embedding_vector(chunk_text) for chunk_text in chunks],
+            model.encode(chunks, output_value="sentence_embedding", batch_size=32),
             dtype=np.float32,
         )
 
@@ -234,6 +115,9 @@ def ingest_document_file(filepath: Path | str, db_path: Path | str | None = None
             cur.execute("RELEASE SAVEPOINT roms_ingest_document")
             conn.commit()
             return False
+        cur.execute("CREATE TABLE IF NOT EXISTS ingestion_details (doc_id TEXT PRIMARY KEY, parser_version TEXT, encoding TEXT, notes_json TEXT)")
+        cur.execute("INSERT OR REPLACE INTO ingestion_details VALUES (?,?,?,?)",
+                    (filename, PARSER_VERSION, parsed.encoding, json.dumps(parsed.notes)))
         old_topic_rows = cur.execute(
             "SELECT DISTINCT ct.topic_id FROM chunk_topics ct "
             "JOIN fts_chunks f USING(chunk_id) WHERE f.doc_id = ?",
@@ -273,6 +157,10 @@ def ingest_document_file(filepath: Path | str, db_path: Path | str | None = None
             [(chunk_id, filename, chunk_text)
              for chunk_id, chunk_text in zip(chunk_ids, chunks)],
         )
+        from app.knowledge_catalog import replace_navigation
+        replace_navigation(conn, filename, list(zip(chunk_ids, chunks)))
+        from app.knowledge_skills import replace_sources
+        replace_sources(conn, filename, title, checksum, list(zip(chunk_ids, chunks)))
         tag_chunks_with_topics(
             list(zip(chunk_ids, chunks)), conn, doc_type=doc_type,
             refresh_topic_ids=old_topic_ids,
@@ -305,14 +193,161 @@ def ingest_okf_directory(
     Returns the number of files ingested or updated.
     """
     target_dir = Path(directory_path) if directory_path is not None else KNOWLEDGE_DIR
+    # An unavailable root is not evidence that its documents were deleted.
     if not target_dir.exists():
-        target_dir.mkdir(parents=True, exist_ok=True)
         return 0
-
+    files, identity = scan_knowledge_files(target_dir)
     ingested_count = 0
-    for file_path in target_dir.iterdir():
-        if file_path.is_file() and file_path.suffix.lower() in SUPPORTED_EXTENSIONS:
-            if ingest_document_file(file_path, db_path=db_path):
-                ingested_count += 1
+    for file_path in files:
+        if ingest_managed_file(file_path, target_dir, db_path):
+            ingested_count += 1
 
+    prune_missing_knowledge(target_dir, files, identity, db_path)
     return ingested_count
+
+
+def scan_knowledge_files(root):
+    """Return a complete scan and its root identity; never accept a partial walk."""
+    root = Path(root)
+    before = root.stat()
+    files = list(knowledge_files(root))
+    after = root.stat()
+    identity = (before.st_dev, before.st_ino)
+    if identity != (after.st_dev, after.st_ino):
+        raise OSError('Knowledge root changed during scanning; retry')
+    return files, identity
+
+
+def prune_missing_knowledge(root, files, identity, db_path=None):
+    """Reconcile a completed scan, only for identities owned by this directory.
+
+    Independently imported snapshots and documents belonging to another root are
+    preserved. Recheck absence under the writer lock and invalidate search caches
+    only after all related index records have committed together.
+    """
+    root = Path(root)
+    present = {Path(path).relative_to(root).as_posix() for path in files}
+    root = root.resolve()
+
+    def check_root():
+        current = root.stat()
+        if (current.st_dev, current.st_ino) != identity:
+            raise OSError('Knowledge root changed during reconciliation; retry')
+
+    check_root()
+    conn = get_connection(db_path, reuse=False)
+    removed = 0
+    try:
+        with conn:
+            conn.execute('BEGIN IMMEDIATE')
+            tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            for doc_id, source in conn.execute('SELECT doc_id,source_path FROM okf_registry').fetchall():
+                if not source or doc_id in present:
+                    continue
+                path = Path(source)
+                try:
+                    relative = path.relative_to(root)
+                except ValueError:
+                    continue
+                # Existing managed documents need no migration. Namespaced UI and
+                # library imports cannot be mistaken for root-relative identities.
+                if relative.as_posix() != doc_id or '..' in relative.parts:
+                    continue
+                try:
+                    path.lstat()  # A reappeared file/link is not a confirmed deletion.
+                    continue
+                except FileNotFoundError:
+                    pass
+                check_root()
+                conn.execute('DELETE FROM chunk_topics WHERE chunk_id IN (SELECT chunk_id FROM fts_chunks WHERE doc_id=?)', (doc_id,))
+                for table in ('vec_chunks', 'fts_chunks', 'okf_registry', 'ingestion_details', 'knowledge_navigation', 'knowledge_skill_sources'):
+                    if table in tables:
+                        conn.execute(f'DELETE FROM {table} WHERE doc_id=?', (doc_id,))
+                if 'ingestion_failures' in tables:
+                    conn.execute('DELETE FROM ingestion_failures WHERE source_path=?', (source,))
+                removed += 1
+            if 'ingestion_failures' in tables:
+                # Failed first imports have no registry row, but their diagnostics
+                # should disappear when the failed source is deliberately removed.
+                for (source,) in conn.execute('SELECT source_path FROM ingestion_failures').fetchall():
+                    path = Path(source)
+                    try:
+                        relative = path.relative_to(root)
+                    except ValueError:
+                        continue
+                    if relative.as_posix() in present or '..' in relative.parts:
+                        continue
+                    try:
+                        path.lstat()
+                    except FileNotFoundError:
+                        conn.execute('DELETE FROM ingestion_failures WHERE source_path=?', (source,))
+            if removed:
+                conn.execute('UPDATE topics SET chunk_count=(SELECT COUNT(*) FROM chunk_topics WHERE chunk_topics.topic_id=topics.topic_id)')
+            check_root()
+    finally:
+        conn.close()
+    if removed:
+        from app.rag_engine import clear_result_cache
+        clear_result_cache()
+    return removed
+
+
+def knowledge_files(root):
+    """Walk the user knowledge folder without following links or dependency folders."""
+    root = Path(root)
+    count = 0
+    def scan_error(error):
+        raise error
+
+    for parent, dirs, files in os.walk(root, followlinks=False, onerror=scan_error):
+        dirs[:] = sorted(name for name in dirs if not name.startswith('.') and name not in
+                         {'node_modules', 'venv', '__pycache__', 'target', 'build', 'dist'}
+                         and not (Path(parent) / name).is_symlink())
+        for name in sorted(files):
+            path = Path(parent) / name
+            if name.startswith('.') or path.is_symlink() or not path.is_file():
+                continue
+            count += 1
+            if count > 10000:
+                raise ValueError('Knowledge folder exceeds the 10,000-file scan limit')
+            yield path
+
+
+def _failure_table(conn):
+    conn.execute('CREATE TABLE IF NOT EXISTS ingestion_failures (source_path TEXT PRIMARY KEY, error TEXT, updated_at TEXT DEFAULT CURRENT_TIMESTAMP)')
+
+
+def ingest_managed_file(path, root, db_path=None):
+    """Return True for indexed, False for unchanged, None for a recorded failure."""
+    import sys
+    path, root = Path(path), Path(root)
+    try:
+        if path.suffix.lower() not in SUPPORTED_EXTENSIONS:
+            raise ValueError(f'Unsupported file extension {path.suffix or "(none)"}; use a supported text, PDF, Office or image format')
+        changed = ingest_document_file(path, db_path, doc_id=path.relative_to(root).as_posix())
+    except Exception as error:
+        conn = get_connection(db_path)
+        _failure_table(conn)
+        conn.execute('INSERT OR REPLACE INTO ingestion_failures(source_path,error,updated_at) VALUES (?,?,CURRENT_TIMESTAMP)',
+                     (str(path.resolve()), f'{type(error).__name__}: {error}'[:2000]))
+        conn.commit()
+        print(f'[ROMS ingestion] {path.name}: {error}', file=sys.stderr)
+        return None
+    conn = get_connection(db_path)
+    _failure_table(conn)
+    conn.execute('DELETE FROM ingestion_failures WHERE source_path=?', (str(path.resolve()),))
+    conn.commit()
+    return changed
+
+
+def get_ingestion_status(db_path=None):
+    conn = get_connection(db_path)
+    tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    failures = [] if 'ingestion_failures' not in tables else [
+        {'source_path': path, 'error': error, 'updated_at': updated}
+        for path, error, updated in conn.execute('SELECT source_path,error,updated_at FROM ingestion_failures ORDER BY updated_at DESC LIMIT 100')]
+    notes = [] if 'ingestion_details' not in tables else [
+        {'doc_id': doc, 'encoding': encoding, 'notes': json.loads(value)}
+        for doc, encoding, value in conn.execute("SELECT doc_id,encoding,notes_json FROM ingestion_details WHERE notes_json != '[]' LIMIT 100")]
+    count = 0 if 'ingestion_failures' not in tables else conn.execute('SELECT count(*) FROM ingestion_failures').fetchone()[0]
+    return {'failure_count': count, 'failures': failures, 'extraction_notes': notes}

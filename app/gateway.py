@@ -324,12 +324,11 @@ def start_gateway(port: int = ROMS_GATEWAY_PORT, host: str = "127.0.0.1"):
     from app.tool_rag import init_default_tool_registry
     from app.okf_loader import ingest_okf_directory
     from app.config import KNOWLEDGE_DIR
-    from app.config import EMBEDDING_PROVIDER, get_embedding_model
+    from app.config import get_embedding_model
     init_database()
     init_default_tool_registry()
     ingest_okf_directory(KNOWLEDGE_DIR)
-    if EMBEDDING_PROVIDER == 'local':
-        get_embedding_model()
+    get_embedding_model()
     print(f"[ROMS Gateway] Starting OpenAI-compatible Smart Cartridge on http://{host}:{port}/v1")
     uvicorn.run(app, host=host, port=port, log_level="warning")
 

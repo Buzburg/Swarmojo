@@ -1,5 +1,8 @@
 # Source library increment — October 5, 2026
 
+Historical verification of an earlier runtime; superseded for current knowledge setup by [ROMS integration](roms-integration.md). These results do not verify the current embedding backend.
+
+
 The installed Goose 2.9B test build now accepts local text files, tracked Git checkout files and text folders into ROMS. A terminal menu is available through the workspace's `Open Knowledge Library.cmd` launcher or `goose --library`. Source ingestion changes retrieval memory only. Training remains deferred.
 
 ## Evidence

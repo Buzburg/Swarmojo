@@ -86,14 +86,17 @@ async def verify(binary: str, root: str) -> None:
                 # A known vector/query pair exercises the native search handler
                 # and SQLite without a model download or a substitute handler.
                 query = 'bridge fixture policy'
-                vector = struct.pack('384f', 1.0, *([0.0] * 383))
+                vector = struct.pack('768f', 1.0, *([0.0] * 767))
                 connection = sqlite3.connect(state / 'data/roms.db')
                 connection.enable_load_extension(True)
                 sqlite_vec.load(connection)
                 connection.enable_load_extension(False)
+                connection.execute('INSERT INTO okf_registry(doc_id, title, doc_type) VALUES (?, ?, ?)', ('bridge.md', 'Bridge fixture', 'general'))
                 connection.execute('INSERT INTO vec_chunks(chunk_id, doc_id, embedding, content) VALUES (?, ?, ?, ?)', (1, 'bridge.md', vector, 'Bridge fixture policy: verified source passage.'))
                 connection.execute('INSERT INTO fts_chunks(chunk_id, doc_id, content) VALUES (?, ?, ?)', (1, 'bridge.md', 'Bridge fixture policy: verified source passage.'))
-                connection.execute('INSERT INTO embedding_cache(query_hash, embedding_blob) VALUES (?, ?)', (hashlib.sha256(query.encode()).hexdigest(), vector))
+                from app.rag_engine import _embedding_namespace
+                cache_payload = json.dumps((_embedding_namespace(), query), ensure_ascii=False)
+                connection.execute('INSERT INTO embedding_cache(query_hash, embedding_blob) VALUES (?, ?)', (hashlib.sha256(cache_payload.encode()).hexdigest(), vector))
                 connection.commit()
                 connection.close()
                 async def call(name, arguments, expected):

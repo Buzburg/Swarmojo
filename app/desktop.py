@@ -121,6 +121,12 @@ class KnowledgeSelection(SearchInput):
     indexed_chunk_sha256: str = Field(pattern=r'^[a-f0-9]{64}$')
 
 
+class KnowledgeBrief(Input):
+    task: str = Field(min_length=1, max_length=2000)
+    constraints: str = Field(default='', max_length=4000)
+    source_ids: list[str] = Field(min_length=1, max_length=8)
+
+
 class WebInput(Input):
     url: str = Field(min_length=8, max_length=2000)
 
@@ -363,6 +369,23 @@ class Desktop:
         result = _knowledge(query, Path(config.DB_PATH))
         for source in result['sources']:
             source['excerpt'] = source['excerpt'][:4000]
+        return result
+
+    def knowledge_brief(self, scope, body):
+        from app.knowledge_brief import prepare
+        from app import config
+        data = KnowledgeBrief.model_validate(body)
+        saved = {s['id']: s for s in self.sources(scope) if s['kind'] == 'roms'}
+        if len(set(data.source_ids)) != len(data.source_ids) or any(i not in saved for i in data.source_ids):
+            raise Problem('Select distinct ROMS references saved in this project.', 409)
+        selected = [saved[i] for i in data.source_ids]
+        if any(type(s['metadata'].get('chunk_id')) is not int for s in selected):
+            raise Problem('Search and reselect these older references before exporting a brief.', 409)
+        result = prepare(data.task, [s['metadata']['chunk_id'] for s in selected], data.constraints, config.DB_PATH)
+        for source, previous in zip(result['sources'], selected):
+            if (source['doc_id'] != previous['metadata']['source_id']
+                    or source['content_sha256'] != previous['metadata']['indexed_chunk_sha256']):
+                raise Problem('A selected reference changed. Search and review it again.', 409)
         return result
 
     def settings(self):
@@ -787,6 +810,8 @@ class Desktop:
                 return self.conversation(scope)
             if len(parts) == 3 and parts[2] == 'knowledge' and method == 'POST':
                 return self.knowledge(body)
+            if len(parts) == 3 and parts[2] == 'knowledge-brief' and method == 'POST':
+                return self.knowledge_brief(scope, body)
             if len(parts) == 3 and parts[2] == 'knowledge-selection' and method == 'POST':
                 data = KnowledgeSelection.model_validate(body)
                 found = self.knowledge({'query':data.query})
@@ -953,13 +978,26 @@ def create_app(state_dir=None, model_client=None):
             'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
         })
 
+    async def utility(request):
+        # Download standalone tools, rather than granting third-party HTML the
+        # desktop origin and access to its API or local storage.
+        filename = request.path_params['filename']
+        if filename not in {'row-witness.html', 'path-carry.html'}:
+            return JSONResponse({'error': 'Not found'}, status_code=404)
+        return FileResponse(ASSETS / 'utilities' / filename, filename=filename,
+                            media_type='text/html', headers={
+                                'X-Content-Type-Options': 'nosniff',
+                                'Cache-Control': 'no-cache',
+                                'Content-Security-Policy': "sandbox; default-src 'none'",
+                            })
+
     @asynccontextmanager
     async def lifespan(app):
         with desktop_lock(desktop.directory):
             desktop.recover_interrupted()
             yield
 
-    app = Starlette(lifespan=lifespan, routes=[Route('/api/{path:path}', api, methods=['GET', 'POST', 'PATCH', 'PUT', 'DELETE']),
+    app = Starlette(lifespan=lifespan, routes=[Route('/utilities/{filename}', utility), Route('/api/{path:path}', api, methods=['GET', 'POST', 'PATCH', 'PUT', 'DELETE']),
                             Route('/', page), Route('/{filename}', page)])
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=['127.0.0.1', 'localhost', '[::1]', 'testserver'])
     app.state.desktop = desktop

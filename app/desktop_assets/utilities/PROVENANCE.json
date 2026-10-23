@@ -1,0 +1,21 @@
+[
+  {
+    "repository": "https://github.com/Buzburg/row-witness",
+    "revision": "a7d6ff3f45c949fb58ac04382e7f38afe205b293",
+    "build": "npm ci --ignore-scripts; npm run build",
+    "files": {
+      "app/desktop_assets/utilities/row-witness.html": "d73d6254ccb9bc24f213531ccd1bca2a8481962eea4aadbeff0c2ff6f16f0272",
+      "app/desktop_assets/utilities/row-witness-LICENSE.txt": "e92cc94da940e56798b3f7449dc8b1553f178395d5604ccc0813fe6f4f0976a2"
+    }
+  },
+  {
+    "repository": "https://github.com/Buzburg/path-carry",
+    "revision": "378b226616215edeb1deaa9d26f1eebd2cdce360",
+    "build": "npm ci --ignore-scripts; npm run build",
+    "files": {
+      "app/desktop_assets/utilities/path-carry.html": "bdef1eb65a1e0102e056d2feecbbff986da67cb56ba56dfe7e0bcb42bd1c5b35",
+      "app/desktop_assets/utilities/path-carry-LICENSE.txt": "e92cc94da940e56798b3f7449dc8b1553f178395d5604ccc0813fe6f4f0976a2",
+      "app/desktop_assets/utilities/path-carry-NOTICES.txt": "b69a33afad1fbb817f09a9a4fd7bd10f722aa79597c01d342dd7b1c483c13aed"
+    }
+  }
+]

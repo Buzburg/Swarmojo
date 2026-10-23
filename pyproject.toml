@@ -29,8 +29,8 @@ dependencies = [
 
 [project.optional-dependencies]
 ml = [
-    "sentence-transformers>=3.0.0",
-    "torch>=2.5"
+    "onnxruntime>=1.22,<2", "transformers>=4.56", "huggingface-hub>=0.34", "torch>=2.5",
+    "pypdf>=6.21.1", "pillow>=13", "python-docx>=1.2", "python-pptx>=1.0.2", "openpyxl>=3.1.5"
 ]
 test = [
     "pytest>=8.0.0"
@@ -62,5 +62,16 @@ aeon = [
 ]
 app = [
     "workbench/*",
-    "desktop_assets/*"
+    "desktop_assets/*",
+    "knowledge_ui.html",
+    "desktop_assets/utilities/*"
 ]
+
+# The knowledge encoder runs on CPU; avoid pulling a CUDA runtime through uv.
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux' or sys_platform == 'win32'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

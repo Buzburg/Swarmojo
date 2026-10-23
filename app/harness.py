@@ -155,7 +155,7 @@ def _knowledge(goal: str, database: Path) -> dict:
             checksum = metadata[1]
             if type(checksum) is not str or not re.fullmatch(r'[a-fA-F0-9]{64}', checksum):
                 raise ValueError('Knowledge source has an invalid stored OKF checksum')
-            sources.append({'source_id': doc_id, 'title': title, 'index_checksum': checksum,
+            sources.append({'source_id': doc_id, 'chunk_id': found['chunk_id'], 'title': title, 'index_checksum': checksum,
                             'indexed_chunk_sha256': _digest(content), 'excerpt': content,
                             'source_file_validated': False})
         return {'status': 'retrieved' if sources else 'no-matches', 'method': 'existing Swarmojo lexical_search / SQLite FTS5',

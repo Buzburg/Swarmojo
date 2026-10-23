@@ -82,7 +82,7 @@ Source backups and build/test outputs are under `Github Gemini/output/roms-nativ
 5. Confirm authorship/licensing of externally sourced code and playbooks before public release. LICENSE and NOTICE exist, but this review is not an independent provenance audit.
 6. Measure retrieval quality and latency on a documented workload before publishing performance comparisons. Experimental research/dataset helpers are not evidence of model training or factual verification.
 
-Additional engineering limits: fixed 384-dimensional embeddings; model changes require a compatible model and rebuilt index. Local generated records can contain sensitive text. Mojo launchers now require Pixi in Linux/WSL and anchor execution to the project directory. The source tree is not currently its own Git repository; avoid Git commands that accidentally operate on an ancestor repository.
+Additional engineering limits: pinned local Q8 embeddings with 768 dimensions; upgrades require a rebuilt index. Local generated records can contain sensitive text. Mojo launchers now require Pixi in Linux/WSL and anchor execution to the project directory. The source tree is not currently its own Git repository; avoid Git commands that accidentally operate on an ancestor repository.
 
 ## Upload contents and recovery
 

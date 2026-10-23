@@ -4,6 +4,7 @@ from app.mcp_policy import MCPPolicy, plugin_allowed, tool_annotations
 
 import importlib.util
 import os
+import threading
 import sys
 from pathlib import Path
 from app.safe_paths import markdown_path
@@ -40,6 +41,9 @@ register_memory_tools(mcp)
 register_engine_tools(mcp)
 register_meta_tools(mcp)
 
+from app.knowledge_skill_tools import register_knowledge_skill_tools
+register_knowledge_skill_tools(mcp)
+
 
 def _prepare_harness_json(request_json: str) -> str:
     import json
@@ -67,9 +71,9 @@ def roms_prepare_harness(request_json: str) -> str:
 
 
 @mcp.tool(annotations=tool_annotations('search_knowledge_base'))
-def search_knowledge_base(query: str, limit: int = 3) -> str:
+def search_knowledge_base(query: str, limit: int = 3, doc_type: str = "", topic: str = "", doc_id: str = "") -> str:
     """Semantic vector search across ingested OKF markdown documentation."""
-    return _search_knowledge_base(query=query, limit=limit)
+    return _search_knowledge_base(query=query, limit=limit, filters={k: v for k, v in (("doc_type", doc_type), ("topic", topic), ("doc_id", doc_id)) if v})
 
 
 @mcp.tool(annotations=tool_annotations('search_grounded_context'))
@@ -82,6 +86,68 @@ def search_grounded_context(query: str, limit: int = 3, max_tokens: int = 512) -
 def add_knowledge_document(filename: str, content: str, title: str = "", doc_type: str = "general") -> str:
     """Adds a new OKF Markdown document to knowledge/ and indexes it in the vector DB in real time."""
     return _add_doc(filename=filename, content=content, title=title, doc_type=doc_type)
+
+
+_intake = None
+_intake_lock = threading.Lock()
+
+
+def _knowledge_intake():
+    global _intake
+    with _intake_lock:
+        if _intake is None:
+            from app.knowledge_intake import Intake
+            _intake = Intake().start()
+    return _intake
+
+
+@mcp.tool(annotations=tool_annotations('queue_knowledge_text'))
+def queue_knowledge_text(name: str, content: str) -> dict:
+    """Save pasted text and queue local extraction/indexing. Name must have a supported extension."""
+    return {'id': _knowledge_intake().submit(name, content.encode('utf-8')), 'state': 'queued'}
+
+
+@mcp.tool(annotations=tool_annotations('queue_knowledge_path'))
+def queue_knowledge_path(path: str, kind: str = 'file') -> dict:
+    """Snapshot an explicitly selected local file/folder and queue imports; never run its code."""
+    from app.source_library import plan_source
+    if kind not in {'file', 'folder'}:
+        raise ValueError('kind must be file or folder')
+    _, files, skipped = plan_source(path, kind)
+    intake = _knowledge_intake()
+    jobs, failures = [], []
+    for relative, data in files:
+        try:
+            jobs.append({'name': str(relative), 'id': intake.submit(relative.as_posix(), data)})
+        except ValueError as error:
+            failures.append({'name': str(relative), 'error': str(error)})
+    return {'jobs': jobs, 'skipped': skipped, 'failures': failures}
+
+
+@mcp.tool(annotations=tool_annotations('knowledge_import_progress'))
+def knowledge_import_progress(offset: int = 0) -> dict:
+    """List queued, processing, ready and failed imports with retry diagnostics."""
+    return _knowledge_intake().status(offset)
+
+
+@mcp.tool(annotations=tool_annotations('retry_knowledge_import'))
+def retry_knowledge_import(job_id: str) -> dict:
+    """Retry a failed import from its retained original snapshot."""
+    return {'queued': _knowledge_intake().retry(job_id)}
+
+
+@mcp.tool(annotations=tool_annotations('knowledge_table_of_contents'))
+def knowledge_table_of_contents(offset: int = 0) -> dict:
+    """List documents, section headings and explicit source-linked glossary definitions."""
+    from app.knowledge_catalog import catalog
+    return catalog(offset=offset)
+
+
+@mcp.tool(annotations=tool_annotations('get_knowledge_ingestion_status'))
+def get_knowledge_ingestion_status() -> dict:
+    """Show files that could not be indexed and text/OCR extraction notes."""
+    from app.okf_loader import get_ingestion_status
+    return get_ingestion_status()
 
 
 @mcp.tool(annotations=tool_annotations('reload_knowledge'))
@@ -242,20 +308,12 @@ def distill_trajectory_to_skill(session_id: str, skill_name: str, description: s
 # ============================================================================
 
 from app.tools import (
-    zg_search_engine as _zg_search_engine,
     get_zg_search_facets as _get_zg_search_facets,
     list_knowledge_topics as _list_knowledge_topics,
-    search_knowledge_by_topic as _search_knowledge_by_topic,
     generate_synthetic_dataset as _generate_synthetic_dataset,
     optimize_agent_prompt as _optimize_agent_prompt,
     evaluate_cartridge_health as _evaluate_cartridge_health,
 )
-
-
-@mcp.tool(annotations=tool_annotations('zg_search'))
-def zg_search(query: str, doc_type: str = "", fuzzy: bool = True, limit: int = 5) -> str:
-    """Search with optional fuzzy query expansion and document-type filtering."""
-    return _zg_search_engine(query=query, doc_type=doc_type, fuzzy=fuzzy, limit=limit)
 
 
 @mcp.tool(annotations=tool_annotations('get_zg_facets'))
@@ -275,12 +333,6 @@ def list_topics() -> str:
     """Lists all auto-extracted hierarchical knowledge topics and chunk counts."""
     import json
     return json.dumps(_list_knowledge_topics(), indent=2)
-
-
-@mcp.tool(annotations=tool_annotations('search_by_topic'))
-def search_by_topic(topic: str, query: str, limit: int = 3) -> str:
-    """Search indexed knowledge within a topic; relevance and correctness still need review."""
-    return _search_knowledge_by_topic(topic=topic, query=query, limit=limit)
 
 
 # ============================================================================

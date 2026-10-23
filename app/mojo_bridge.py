@@ -1,7 +1,9 @@
 """Typed MCP schemas around compiled Mojo callables; no generated Python source."""
+
+from app.mcp_annotations import tool_annotations
 from typing import Protocol
 from fastmcp import FastMCP
-from app.mcp_policy import MCPPolicy, tool_annotations
+from app.mcp_policy import MCPPolicy
 from app.config import SKILLS_DIR
 from app.safe_paths import markdown_path
 from app.memory_tools import register_memory_tools
@@ -16,6 +18,8 @@ class NativeHandlers(Protocol):
 
 def build_server(native: NativeHandlers) -> FastMCP:
     server = FastMCP("ROMS-Mojo-Engine", middleware=[MCPPolicy()])
+    from app.knowledge_skill_tools import register_knowledge_skill_tools
+    register_knowledge_skill_tools(server)
     register_memory_tools(server, selector=native.pack_context, backend='mojo')
 
     @server.tool(annotations=tool_annotations('search_knowledge_base'))
